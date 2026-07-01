@@ -32,3 +32,6 @@ export const IMAGE_FRAMING = {
   outdoor: "object-cover object-[center_30%]",
   contact: "object-cover object-[center_22%]",
 } as const;
+
+export const EARTH_MAP =
+  "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg";

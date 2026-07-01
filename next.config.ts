@@ -1,6 +1,21 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
+const threeShim = path.resolve(__dirname, "lib/three-shim.ts");
+
 const nextConfig: NextConfig = {
+  turbopack: {
+    resolveAlias: {
+      three: "./lib/three-shim.ts",
+    },
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      three: threeShim,
+    };
+    return config;
+  },
   experimental: {
     optimizePackageImports: [
       "lucide-react",

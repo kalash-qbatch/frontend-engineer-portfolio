@@ -5,38 +5,67 @@ import { Float, MeshDistortMaterial, Stars } from "@react-three/drei";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { SafeCanvas } from "@/components/canvas/SafeCanvas";
+import { markHeroBlobReady } from "@/lib/hero-blob-ready";
+
+interface HeroCursorState {
+  x: number;
+  y: number;
+  active: boolean;
+}
 
 interface SceneProps {
   scrollRef: RefObject<number>;
+  cursorRef: RefObject<HeroCursorState>;
   quality: "high" | "low";
 }
 
-function DistortBlob({ scrollRef }: { scrollRef: RefObject<number> }) {
+function DistortBlob({
+  scrollRef,
+  cursorRef,
+  quality,
+}: {
+  scrollRef: RefObject<number>;
+  cursorRef: RefObject<HeroCursorState>;
+  quality: "high" | "low";
+}) {
   const ref = useRef<THREE.Mesh>(null);
-  const mouse = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouse.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
-    };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
+  const smooth = useRef({ x: 0, y: 0 });
 
   useFrame((state) => {
     if (!ref.current) return;
     const t = state.clock.elapsedTime;
-    ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, t * 0.12 + mouse.current.y * 0.25, 0.05);
-    ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, t * 0.18 + mouse.current.x * 0.25, 0.05);
-    ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, 0.6 + mouse.current.x * 0.15, 0.05);
-    ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 0.1 + scrollRef.current * -2, 0.08);
+    const cursor = cursorRef.current;
+    const targetX = cursor.active ? cursor.x : 0;
+    const targetY = cursor.active ? cursor.y : 0;
+    smooth.current.x = THREE.MathUtils.lerp(smooth.current.x, targetX, 0.07);
+    smooth.current.y = THREE.MathUtils.lerp(smooth.current.y, targetY, 0.07);
+
+    ref.current.rotation.x = THREE.MathUtils.lerp(
+      ref.current.rotation.x,
+      t * 0.12 + smooth.current.y * 0.2,
+      0.05
+    );
+    ref.current.rotation.y = THREE.MathUtils.lerp(
+      ref.current.rotation.y,
+      t * 0.18 + smooth.current.x * 0.2,
+      0.05
+    );
+    ref.current.position.x = THREE.MathUtils.lerp(
+      ref.current.position.x,
+      0.6 + smooth.current.x * 0.55,
+      0.07
+    );
+    ref.current.position.y = THREE.MathUtils.lerp(
+      ref.current.position.y,
+      0.1 + smooth.current.y * 0.4 + scrollRef.current * -2,
+      0.08
+    );
   });
 
   return (
     <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.4}>
       <mesh ref={ref} scale={2.4} position={[0.6, 0.1, 0]}>
-        <icosahedronGeometry args={[1, 24]} />
+        <icosahedronGeometry args={[1, quality === "high" ? 20 : 12]} />
         <MeshDistortMaterial
           color="#8b5cf6"
           emissive="#5b21b6"
@@ -53,9 +82,15 @@ function DistortBlob({ scrollRef }: { scrollRef: RefObject<number> }) {
   );
 }
 
-function CursorParticles({ count }: { count: number }) {
+function CursorParticles({
+  count,
+  cursorRef,
+}: {
+  count: number;
+  cursorRef: RefObject<HeroCursorState>;
+}) {
   const ref = useRef<THREE.Points>(null);
-  const mouse = useRef({ x: 0, y: 0 });
+  const smooth = useRef({ x: 0, y: 0 });
 
   const base = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -67,23 +102,20 @@ function CursorParticles({ count }: { count: number }) {
     return pos;
   }, [count]);
 
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 4;
-      mouse.current.y = -(e.clientY / window.innerHeight - 0.5) * 4;
-    };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-
   useFrame((state) => {
     if (!ref.current) return;
     ref.current.rotation.y = state.clock.elapsedTime * 0.03;
+    const cursor = cursorRef.current;
+    const targetX = cursor.active ? cursor.x * 2 : 0;
+    const targetY = cursor.active ? cursor.y * 2 : 0;
+    smooth.current.x = THREE.MathUtils.lerp(smooth.current.x, targetX, 0.06);
+    smooth.current.y = THREE.MathUtils.lerp(smooth.current.y, targetY, 0.06);
+
     const arr = ref.current.geometry.attributes.position.array as Float32Array;
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
-      arr[i3] += (mouse.current.x * 0.02 - arr[i3] * 0.01) * 0.15;
-      arr[i3 + 1] += (mouse.current.y * 0.02 - arr[i3 + 1] * 0.01) * 0.15;
+      arr[i3] += (smooth.current.x * 0.02 - arr[i3] * 0.01) * 0.15;
+      arr[i3 + 1] += (smooth.current.y * 0.02 - arr[i3 + 1] * 0.01) * 0.15;
     }
     ref.current.geometry.attributes.position.needsUpdate = true;
   });
@@ -106,9 +138,21 @@ function CursorParticles({ count }: { count: number }) {
   );
 }
 
-function SceneContent({ scrollRef, quality }: SceneProps) {
-  const particleCount = quality === "high" ? 200 : 80;
-  const starCount = quality === "high" ? 600 : 200;
+function BlobReadyNotifier() {
+  const reported = useRef(false);
+
+  useFrame(() => {
+    if (reported.current) return;
+    reported.current = true;
+    markHeroBlobReady();
+  });
+
+  return null;
+}
+
+function SceneContent({ scrollRef, cursorRef, quality }: SceneProps) {
+  const particleCount = quality === "high" ? 140 : 60;
+  const starCount = quality === "high" ? 400 : 120;
 
   return (
     <>
@@ -118,23 +162,55 @@ function SceneContent({ scrollRef, quality }: SceneProps) {
       <directionalLight position={[-4, -2, 3]} intensity={0.5} color="#3b82f6" />
       <pointLight position={[2, 1, 4]} intensity={1.5} color="#a78bfa" />
       <Stars radius={50} depth={30} count={starCount} factor={2} saturation={0} fade speed={0.3} />
-      <DistortBlob scrollRef={scrollRef} />
-      <CursorParticles count={particleCount} />
+      <DistortBlob scrollRef={scrollRef} cursorRef={cursorRef} quality={quality} />
+      <CursorParticles count={particleCount} cursorRef={cursorRef} />
+      <BlobReadyNotifier />
     </>
   );
 }
 
-export function HeroBlobFallback() {
+export function HeroBlobFallback({
+  cursorRef,
+}: {
+  cursorRef?: RefObject<HeroCursorState>;
+}) {
+  const groupRef = useRef<HTMLDivElement>(null);
+  const smooth = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!cursorRef) return;
+    const group = groupRef.current;
+    if (!group) return;
+
+    let frame = 0;
+    const tick = () => {
+      const cursor = cursorRef.current;
+      const targetX = cursor.active ? cursor.x : 0;
+      const targetY = cursor.active ? cursor.y : 0;
+      smooth.current.x += (targetX - smooth.current.x) * 0.08;
+      smooth.current.y += (targetY - smooth.current.y) * 0.08;
+      const px = smooth.current.x * 56;
+      const py = smooth.current.y * 40;
+      group.style.transform = `translate3d(${px}px, ${py}px, 0)`;
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [cursorRef]);
+
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="hero-blob-core absolute left-[58%] top-[38%] h-[42vmin] w-[42vmin]">
-        <div className="hero-blob-sphere h-full w-full rounded-full bg-gradient-to-br from-violet-500/55 via-purple-600/35 to-indigo-900/25 shadow-[0_0_80px_rgba(139,92,246,0.45)]" />
-      </div>
-      <div className="absolute left-[58%] top-[38%] h-[55vmin] w-[55vmin] -translate-x-1/2 -translate-y-1/2">
-        <div className="h-full w-full animate-[blob-glow_5s_ease-in-out_infinite] rounded-full bg-violet-600/30 blur-[90px]" />
-      </div>
-      <div className="absolute left-[52%] top-[42%] h-[28vmin] w-[28vmin] -translate-x-1/2 -translate-y-1/2">
-        <div className="h-full w-full animate-[blob-glow_7s_ease-in-out_infinite_0.8s] rounded-full bg-violet-400/20 blur-[50px]" />
+      <div ref={groupRef} className="absolute inset-0 will-change-transform">
+        <div className="hero-blob-core absolute left-[58%] top-[38%] h-[42vmin] w-[42vmin]">
+          <div className="hero-blob-sphere h-full w-full rounded-full bg-gradient-to-br from-violet-500/55 via-purple-600/35 to-indigo-900/25 shadow-[0_0_80px_rgba(139,92,246,0.45)]" />
+        </div>
+        <div className="absolute left-[58%] top-[38%] h-[55vmin] w-[55vmin] -translate-x-1/2 -translate-y-1/2">
+          <div className="h-full w-full animate-[blob-glow_5s_ease-in-out_infinite] rounded-full bg-violet-600/30 blur-[90px]" />
+        </div>
+        <div className="absolute left-[52%] top-[42%] h-[28vmin] w-[28vmin] -translate-x-1/2 -translate-y-1/2">
+          <div className="h-full w-full animate-[blob-glow_7s_ease-in-out_infinite_0.8s] rounded-full bg-violet-400/20 blur-[50px]" />
+        </div>
       </div>
       <div className="absolute right-1/4 top-1/2 h-[30vmin] w-[30vmin] -translate-y-1/2">
         <div className="h-full w-full animate-[blob-glow_6s_ease-in-out_infinite_1.2s] rounded-full bg-blue-600/15 blur-[80px]" />
@@ -145,10 +221,14 @@ export function HeroBlobFallback() {
 
 export function HeroBlobScene({
   scrollRef,
+  cursorRef,
   quality,
+  onCanvasFailed,
 }: {
   scrollRef: RefObject<number>;
+  cursorRef: RefObject<HeroCursorState>;
   quality: "high" | "low";
+  onCanvasFailed?: () => void;
 }) {
   return (
     <SafeCanvas
@@ -156,10 +236,16 @@ export function HeroBlobScene({
       fallback={null}
       priority="hero"
       camera={{ position: [0, 0, 6], fov: 50 }}
-      dpr={[1, 1.25]}
+      dpr={quality === "high" ? [1, 1.15] : [1, 1]}
       frameloop="always"
+      onCreated={(state) => {
+        const context = state.gl.getContext();
+        if (!context || context.isContextLost()) {
+          onCanvasFailed?.();
+        }
+      }}
     >
-      <SceneContent scrollRef={scrollRef} quality={quality} />
+      <SceneContent scrollRef={scrollRef} cursorRef={cursorRef} quality={quality} />
     </SafeCanvas>
   );
 }

@@ -10,6 +10,7 @@
     "generate:favicons": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@hookform/resolvers": "^5.4.0",
     "@radix-ui/react-dialog": "^1.1.17",
     "@radix-ui/react-label": "^2.1.10",
@@ -29,6 +30,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.80.0",
     "react-icons": "^5.6.0",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "three": "^0.185.0",
     "zod": "^4.4.3"

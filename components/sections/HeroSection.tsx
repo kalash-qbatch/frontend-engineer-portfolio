@@ -13,7 +13,9 @@ import { IdentityStrip } from "@/components/ui/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { ScrollLink } from "@/components/ui/ScrollLink";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWebGL } from "@/hooks/useWebGL";
+import { markHeroBlobReady } from "@/lib/hero-blob-ready";
 import { EASE, heroStagger, slideInLeft } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +39,15 @@ const SplitText = dynamic(
   { ssr: false }
 );
 
-export const HeroSection = memo(function HeroSection() {
+export const HeroSection = memo(function HeroSection({
+  blobPreload = false,
+}: {
+  blobPreload?: boolean;
+}) {
   const ref = useRef<HTMLElement>(null);
   const scrollRef = useRef(0);
+  const cursorRef = useRef({ x: 0, y: 0, active: false });
+  const reducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 120]);
   const portraitY = useTransform(scrollYProgress, [0, 1], [0, 40]);
@@ -52,11 +60,49 @@ export const HeroSection = memo(function HeroSection() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    if (!canUse3D) markHeroBlobReady();
+  }, [mounted, canUse3D]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const timeout = window.setTimeout(() => markHeroBlobReady(), 8000);
+    return () => window.clearTimeout(timeout);
+  }, [mounted]);
+
   const mobileMotion = mounted && isMobile;
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     scrollRef.current = v;
   });
+
+  useEffect(() => {
+    if (reducedMotion || isMobile) return;
+
+    const onMove = (e: MouseEvent) => {
+      const section = ref.current;
+      if (!section) return;
+
+      const rect = section.getBoundingClientRect();
+      const inside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+
+      cursorRef.current.active = inside;
+      if (!inside) return;
+
+      const nx = (e.clientX - rect.left) / rect.width;
+      const ny = (e.clientY - rect.top) / rect.height;
+      cursorRef.current.x = (nx - 0.5) * 2;
+      cursorRef.current.y = -((ny - 0.5) * 2);
+    };
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [reducedMotion, isMobile]);
 
   return (
     <section
@@ -65,11 +111,20 @@ export const HeroSection = memo(function HeroSection() {
       className="relative flex min-h-[100dvh] flex-col justify-end overflow-x-clip"
       aria-label="Hero"
     >
-      <motion.div className="absolute inset-0 z-[1]" style={{ opacity: contentOpacity }}>
-        <HeroBlobFallback />
+      <motion.div
+        className="absolute inset-0 z-[1]"
+        style={{ opacity: blobPreload ? 0 : contentOpacity }}
+        aria-hidden={blobPreload}
+      >
+        <HeroBlobFallback cursorRef={cursorRef} />
         {mounted && canUse3D && (
           <Viewport3D className="absolute inset-0" rootMargin="120px 0px" threshold={0}>
-            <HeroBlobScene scrollRef={scrollRef} quality={isMobile ? "low" : "high"} />
+            <HeroBlobScene
+              scrollRef={scrollRef}
+              cursorRef={cursorRef}
+              quality={isMobile ? "low" : "high"}
+              onCanvasFailed={markHeroBlobReady}
+            />
           </Viewport3D>
         )}
       </motion.div>

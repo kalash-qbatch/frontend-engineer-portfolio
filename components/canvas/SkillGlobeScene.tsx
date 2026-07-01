@@ -116,7 +116,7 @@ const OrbitSkillPin = memo(function OrbitSkillPin({
           type="button"
           className={cn(
             "flex items-center justify-center rounded-full border border-black/10 bg-white transition-all duration-300",
-            lit ? "h-6 w-6" : "h-5 w-5"
+            lit ? "h-5 w-5" : "h-4 w-4"
           )}
           style={{
             boxShadow: lit
@@ -133,7 +133,7 @@ const OrbitSkillPin = memo(function OrbitSkillPin({
           }}
           aria-label={skill.name}
         >
-          <Icon size={lit ? 11 : 10} style={{ color: iconColor }} />
+          <Icon size={lit ? 9 : 8} style={{ color: iconColor }} />
         </button>
       </Html>
     </group>
@@ -276,10 +276,10 @@ export function GlobeFallback({ skills, transitionKey }: { skills: Skill[]; tran
               >
                 <div className="animate-[spin_22s_linear_infinite_reverse]">
                   <span
-                    className="flex h-5 w-5 items-center justify-center rounded-full border border-black/10 bg-white shadow-md animate-[orbit-pin-in_0.5s_ease-out_both]"
+                    className="flex h-4 w-4 items-center justify-center rounded-full border border-black/10 bg-white shadow-md animate-[orbit-pin-in_0.5s_ease-out_both]"
                     style={{ animationDelay: `${i * 0.04}s` }}
                   >
-                    <Icon size={10} style={{ color: iconColor }} />
+                    <Icon size={8} style={{ color: iconColor }} />
                   </span>
                 </div>
               </div>
@@ -315,7 +315,7 @@ export function SkillGlobeScene({
       fallback={<GlobeFallback skills={stableSkills} transitionKey={transitionKey} />}
       camera={{ position: [0, 0, 3.2], fov: 46 }}
       dpr={[1, 1.25]}
-      frameloop="demand"
+      frameloop="always"
       gl={{ alpha: true }}
       style={{ background: "transparent" }}
     >

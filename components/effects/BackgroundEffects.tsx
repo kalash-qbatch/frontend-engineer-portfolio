@@ -1,11 +1,13 @@
 "use client";
 
 import { memo } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export const NoiseOverlay = memo(function NoiseOverlay() {
   const reducedMotion = useReducedMotion();
-  if (reducedMotion) return null;
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  if (reducedMotion || isMobile) return null;
 
   return (
     <div

@@ -1,112 +1,220 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
+import { memo, useCallback, type PointerEvent, type RefObject } from "react";
 import type { Project } from "@/constants/projects";
-import { Badge } from "@/components/ui/badge";
-import { EASE } from "@/lib/motion";
-import { cn } from "@/lib/utils";
+import { getProjectVisual } from "@/constants/projectVisuals";
+import { ProjectCardVisual } from "@/components/sections/ProjectCardVisual";
+import { ProjectTechStack } from "@/components/sections/ProjectTechStack";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { EASE, STAGGER } from "@/lib/motion";
 
 type ProjectStackScrollProps = {
   projects: Project[];
+  sectionRef: RefObject<HTMLElement | null>;
 };
 
-function ProjectGridCard({ project, index }: { project: Project; index: number }) {
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.5, delay: index * 0.05, ease: EASE }}
-      data-cursor-label="View"
-      className="card-glow group flex h-full flex-col overflow-hidden rounded-xl"
-    >
-      <div className="relative aspect-[16/10] overflow-hidden bg-surface">
-        <div
-          className={cn(
-            "absolute inset-0 bg-gradient-to-br opacity-90 transition-opacity group-hover:opacity-100",
-            project.gradient
-          )}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-display text-5xl font-bold text-foreground/[0.06]">
-            {project.title[0]}
-          </span>
-        </div>
-        <div className="absolute top-3 left-3">
-          <Badge variant="accent" className="text-[10px]">
-            {project.year}
-          </Badge>
-        </div>
-      </div>
+function useCardTilt() {
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const tiltX = useSpring(rotateX, { stiffness: 260, damping: 24 });
+  const tiltY = useSpring(rotateY, { stiffness: 260, damping: 24 });
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-base font-bold tracking-tight md:text-lg">
-          {project.title}
-        </h3>
-        <p className="mt-1 font-mono text-[9px] tracking-wide text-muted uppercase">
-          {project.role}
-        </p>
-        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">
-          {project.description}
-        </p>
-
-        <div className="mt-3 flex flex-wrap gap-1">
-          {project.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="px-1.5 py-0 text-[10px]">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-
-        <div className="mt-auto flex flex-wrap gap-2 pt-4">
-          <Link
-            href={`/projects/${project.id}`}
-            data-cursor="pointer"
-            className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-[11px] text-background transition-opacity hover:opacity-90"
-          >
-            Case study
-            <ArrowUpRight size={12} />
-          </Link>
-          {project.github && (
-            <a
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[11px] text-muted transition-colors hover:text-foreground"
-              aria-label={`${project.title} source code`}
-            >
-              <FaGithub size={12} />
-            </a>
-          )}
-          {project.live && (
-            <a
-              href={project.live}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[11px] text-muted transition-colors hover:text-foreground"
-              aria-label={`${project.title} live demo`}
-            >
-              Live
-              <ArrowUpRight size={12} />
-            </a>
-          )}
-        </div>
-      </div>
-    </motion.article>
+  const onMove = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      rotateY.set(x * 5);
+      rotateX.set(-y * 5);
+    },
+    [rotateX, rotateY]
   );
+
+  const onLeave = useCallback(() => {
+    rotateX.set(0);
+    rotateY.set(0);
+  }, [rotateX, rotateY]);
+
+  return { tiltX, tiltY, onMove, onLeave };
 }
 
-export function ProjectStackScroll({ projects }: ProjectStackScrollProps) {
+function useCardScrollMotion(
+  sectionRef: RefObject<HTMLElement | null>,
+  index: number,
+  reducedMotion: boolean
+) {
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start 0.85", "end 0.35"],
+  });
+
+  const start = index * 0.08;
+  const end = start + 0.35;
+  const y = useTransform(scrollYProgress, [start, end], reducedMotion ? [0, 0] : [56, 0]);
+  const opacity = useTransform(scrollYProgress, [start, end], reducedMotion ? [1, 1] : [0, 1]);
+  const scale = useTransform(scrollYProgress, [start, end], reducedMotion ? [1, 1] : [0.94, 1]);
+  const rotateX = useTransform(scrollYProgress, [start, end], reducedMotion ? [0, 0] : [8, 0]);
+
+  return { y, opacity, scale, rotateX };
+}
+
+const ProjectGridCard = memo(function ProjectGridCard({
+  project,
+  index,
+  sectionRef,
+}: {
+  project: Project;
+  index: number;
+  sectionRef: RefObject<HTMLElement | null>;
+}) {
+  const reducedMotion = useReducedMotion();
+  const colors = getProjectVisual(project.id);
+  const { tiltX, tiltY, onMove, onLeave } = useCardTilt();
+  const { y, opacity, scale, rotateX } = useCardScrollMotion(sectionRef, index, reducedMotion);
+
+  const accentStyle = {
+    "--project-primary": colors.primary,
+    "--project-accent": colors.accent,
+  } as React.CSSProperties;
+
+  return (
+    <motion.div
+      style={{
+        y: reducedMotion ? undefined : y,
+        opacity: reducedMotion ? undefined : opacity,
+        scale: reducedMotion ? undefined : scale,
+        rotateX: reducedMotion ? undefined : rotateX,
+        transformPerspective: 1200,
+      }}
+    >
+      <motion.article
+        layout
+        initial={false}
+        style={{
+          rotateX: reducedMotion ? undefined : tiltX,
+          rotateY: reducedMotion ? undefined : tiltY,
+          transformPerspective: 900,
+          ...accentStyle,
+        }}
+        onPointerMove={reducedMotion ? undefined : onMove}
+        onPointerLeave={reducedMotion ? undefined : onLeave}
+        transition={{ layout: { duration: 0.45, ease: EASE } }}
+        data-cursor-label="View"
+        className="card-glow project-card group flex h-full flex-col overflow-hidden rounded-2xl border border-border/50 will-change-transform"
+      >
+        <ProjectCardVisual project={project} index={index} />
+
+        <div className="relative flex min-h-52 flex-1 flex-col border-t border-border/40 bg-linear-to-b from-surface/30 via-surface/50 to-surface/70 p-5 backdrop-blur-sm">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-0 right-0 h-24 w-24 opacity-30"
+            style={{
+              background: `radial-gradient(circle at top right, ${colors.primary}40, transparent 70%)`,
+            }}
+          />
+
+          <h3 className="relative font-display text-base font-bold tracking-tight text-foreground md:text-lg">
+            <span className="bg-linear-to-r from-foreground to-foreground bg-size-[0%_2px] bg-bottom-left bg-no-repeat transition-all duration-300 group-hover:bg-size-[100%_2px] group-hover:from-[var(--project-accent)] group-hover:to-[var(--project-primary)]">
+              {project.title}
+            </span>
+          </h3>
+          <p
+            className="relative mt-1 font-mono text-[9px] tracking-[0.16em] uppercase"
+            style={{ color: `color-mix(in srgb, ${colors.accent} 70%, var(--muted))` }}
+          >
+            {project.role}
+          </p>
+          <p className="relative mt-2 min-h-10 line-clamp-2 text-xs leading-relaxed text-muted">
+            {project.description}
+          </p>
+
+          <ProjectTechStack tags={project.tags} accent={colors.accent} className="mt-3" />
+
+          <div className="relative mt-auto flex min-h-10 flex-wrap items-center gap-2 pt-5">
+            <Link
+              href={`/projects/${project.id}`}
+              data-cursor="pointer"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[11px] font-medium text-white shadow-md transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]"
+              style={{
+                background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                boxShadow: `0 4px 20px ${colors.primary}40`,
+              }}
+            >
+              Case study
+              <ArrowUpRight size={12} />
+            </Link>
+            {project.github && (
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-surface/30 px-3 py-2 text-[11px] text-muted backdrop-blur-sm transition-all duration-300 hover:border-[color-mix(in_srgb,var(--project-accent)_40%,transparent)] hover:text-foreground"
+                aria-label={`${project.title} source code`}
+              >
+                <FaGithub size={12} />
+              </a>
+            )}
+            {project.live && (
+              <a
+                href={project.live}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-surface/30 px-3 py-1.5 text-[11px] text-muted backdrop-blur-sm transition-all duration-300 hover:border-[color-mix(in_srgb,var(--project-accent)_40%,transparent)] hover:text-foreground"
+                aria-label={`${project.title} live demo`}
+              >
+                Live
+                <ArrowUpRight size={12} />
+              </a>
+            )}
+          </div>
+        </div>
+      </motion.article>
+    </motion.div>
+  );
+});
+
+export function ProjectStackScroll({ projects, sectionRef }: ProjectStackScrollProps) {
   if (projects.length === 0) return null;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project, index) => (
-        <ProjectGridCard key={project.id} project={project} index={index} />
-      ))}
-    </div>
+    <motion.div
+      layout
+      className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      style={{ perspective: 1200 }}
+    >
+      <AnimatePresence mode="popLayout">
+        {projects.map((project, index) => (
+          <motion.div
+            key={project.id}
+            layout
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{
+              duration: 0.4,
+              delay: index * STAGGER.tight,
+              ease: EASE,
+            }}
+          >
+            <ProjectGridCard
+              project={project}
+              index={index}
+              sectionRef={sectionRef}
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </motion.div>
   );
 }

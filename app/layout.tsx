@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono, Syne } from "next/font/google";
 import "./globals.css";
 import { buildRootJsonLd, jsonLdScript, rootMetadata } from "@/lib/seo";
+import { Toaster } from "@/components/ui/Toaster";
 
 const syne = Syne({
   variable: "--font-syne",
@@ -44,6 +45,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         {children}
+        <Toaster />
       </body>
     </html>
   );

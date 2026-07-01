@@ -1,8 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useState } from "react";
-import { HeroBlobFallback } from "@/components/canvas/HeroBlobScene";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SITE } from "@/constants/site";
 import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -10,15 +9,20 @@ import { EASE } from "@/lib/motion";
 
 interface BootLoaderProps {
   onComplete: () => void;
+  canComplete?: boolean;
 }
 
 const MIN_DISPLAY_MS = 1500;
 
-export function BootLoader({ onComplete }: BootLoaderProps) {
+export function BootLoader({ onComplete, canComplete = false }: BootLoaderProps) {
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(true);
   const [canSkip, setCanSkip] = useState(false);
   const reducedMotion = useReducedMotion();
+  const canCompleteRef = useRef(canComplete);
+  const startedAtRef = useRef(Date.now());
+
+  canCompleteRef.current = canComplete;
 
   const finish = useCallback(() => {
     setVisible(false);
@@ -30,26 +34,36 @@ export function BootLoader({ onComplete }: BootLoaderProps) {
       return;
     }
 
-    const skipTimer = setTimeout(() => setCanSkip(true), MIN_DISPLAY_MS);
+    const skipTimer = window.setTimeout(() => setCanSkip(true), MIN_DISPLAY_MS);
 
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - startedAtRef.current;
+      const minElapsed = elapsed >= MIN_DISPLAY_MS;
+      const ready = canCompleteRef.current;
+
       setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          finish();
-          return 100;
+        if (ready && minElapsed) {
+          return Math.min(100, prev + 5);
         }
-        return prev + 4;
+        return Math.min(92, prev + 2);
       });
-    }, 45);
+    }, 50);
 
     return () => {
-      clearTimeout(skipTimer);
-      clearInterval(interval);
+      window.clearTimeout(skipTimer);
+      window.clearInterval(interval);
     };
-  }, [reducedMotion, onComplete, finish]);
+  }, [reducedMotion, onComplete]);
+
+  useEffect(() => {
+    if (!canComplete || progress < 100) return;
+    if (Date.now() - startedAtRef.current < MIN_DISPLAY_MS) return;
+    finish();
+  }, [canComplete, progress, finish]);
 
   if (reducedMotion) return null;
+
+  const allowSkip = canSkip && canComplete;
 
   return (
     <AnimatePresence onExitComplete={onComplete}>
@@ -58,14 +72,11 @@ export function BootLoader({ onComplete }: BootLoaderProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.55, ease: EASE }}
           className="fixed inset-0 z-[200] flex cursor-pointer items-center justify-center overflow-hidden"
-          onClick={() => canSkip && finish()}
+          onClick={() => allowSkip && finish()}
           role="button"
-          aria-label={canSkip ? "Skip loading" : "Loading"}
+          aria-label={allowSkip ? "Skip loading" : "Loading"}
         >
           <div className="absolute inset-0 bg-background/75 backdrop-blur-3xl backdrop-saturate-150" aria-hidden />
-          {/* <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-            <HeroBlobFallback />
-          </div> */}
 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -78,7 +89,7 @@ export function BootLoader({ onComplete }: BootLoaderProps) {
               {SITE.name}
             </p>
             <p className="mt-2 font-mono text-[10px] tracking-[0.22em] text-muted uppercase md:text-[11px]">
-              Portfolio getting ready
+              {canComplete ? "Scene ready" : "Warming up WebGL scene"}
             </p>
             <motion.p
               initial={{ opacity: 0 }}
@@ -88,7 +99,7 @@ export function BootLoader({ onComplete }: BootLoaderProps) {
             >
               {progress}%
             </motion.p>
-            {canSkip && (
+            {allowSkip && (
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

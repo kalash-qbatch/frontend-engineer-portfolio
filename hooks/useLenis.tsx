@@ -6,14 +6,23 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import {
+  nativeScrollTo,
+  resolveScrollElement,
+  SCROLL_MAX_ATTEMPTS,
+  SCROLL_NAV_OFFSET,
+  SCROLL_RETRY_MS,
+  type ScrollTarget,
+} from "@/lib/scroll-target";
 import { useReducedMotion } from "./useReducedMotion";
 
 type LenisContextValue = {
   lenis: Lenis | null;
-  scrollTo: (target: string | HTMLElement | number, offset?: number) => void;
+  scrollTo: (target: ScrollTarget, offset?: number) => void;
 };
 
 const LenisContext = createContext<LenisContextValue>({
@@ -29,7 +38,12 @@ export function LenisProvider({
   enabled: boolean;
 }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
+  const lenisRef = useRef<Lenis | null>(null);
   const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
 
   useEffect(() => {
     if (!enabled || reducedMotion) return;
@@ -53,8 +67,13 @@ export function LenisProvider({
         syncTouch: true,
         syncTouchLerp: 0.1,
         infinite: false,
+        anchors: {
+          offset: SCROLL_NAV_OFFSET,
+          duration: 1.1,
+        },
       });
 
+      lenisRef.current = instance;
       setLenis(instance);
 
       resize = () => instance?.resize();
@@ -70,25 +89,47 @@ export function LenisProvider({
       clearTimeout(t2);
       if (resize) window.removeEventListener("resize", resize);
       instance?.destroy();
+      lenisRef.current = null;
       setLenis(null);
     };
   }, [enabled, reducedMotion]);
 
-  const scrollTo = useCallback(
-    (target: string | HTMLElement | number, offset = -88) => {
-      if (lenis) {
-        lenis.scrollTo(target, { offset, duration: 1.1 });
+  const scrollTo = useCallback((target: ScrollTarget, offset = SCROLL_NAV_OFFSET) => {
+    const attemptScroll = (attempt = 0) => {
+      const resolved =
+        typeof target === "number" || target instanceof HTMLElement
+          ? target
+          : resolveScrollElement(target);
+
+      if (resolved === null) {
+        if (attempt < SCROLL_MAX_ATTEMPTS) {
+          window.setTimeout(() => attemptScroll(attempt + 1), SCROLL_RETRY_MS);
+        }
         return;
       }
-      if (typeof target === "number") {
-        window.scrollTo({ top: target, behavior: "smooth" });
+
+      const instance = lenisRef.current;
+
+      if (instance) {
+        instance.resize();
+        instance.scrollTo(resolved, {
+          offset,
+          duration: 1.1,
+          force: true,
+        });
         return;
       }
-      const el = typeof target === "string" ? document.querySelector(target) : target;
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [lenis]
-  );
+
+      if (attempt < SCROLL_MAX_ATTEMPTS) {
+        window.setTimeout(() => attemptScroll(attempt + 1), SCROLL_RETRY_MS);
+        return;
+      }
+
+      nativeScrollTo(resolved, offset);
+    };
+
+    attemptScroll();
+  }, []);
 
   return (
     <LenisContext.Provider value={{ lenis, scrollTo }}>

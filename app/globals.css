@@ -197,6 +197,188 @@ body {
   animation: blob-glow 4.5s ease-in-out infinite;
 }
 
+.project-card-shimmer {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: project-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes scroll-progress-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes scroll-progress-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateY(-50%) translateX(50%) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-50%) translateX(50%) scale(1.15);
+  }
+}
+
+.scroll-progress-fill {
+  box-shadow:
+    0 0 16px rgba(139, 92, 246, 0.55),
+    0 0 32px rgba(34, 211, 238, 0.25);
+}
+
+.scroll-progress-shimmer {
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 70%
+  );
+  animation: scroll-progress-shimmer 1.8s ease-in-out infinite;
+}
+
+.scroll-progress-glow {
+  animation: scroll-progress-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes project-globe-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes project-orbit-spin {
+  from {
+    transform: rotateZ(0deg);
+  }
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+.project-globe-stage {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+.project-orbit-spin {
+  animation: project-orbit-spin var(--orbit-duration, 20s) linear infinite;
+  will-change: transform;
+}
+
+.project-orbit-icons {
+  animation: project-orbit-spin var(--orbit-duration, 20s) linear infinite reverse;
+  will-change: transform;
+}
+
+.project-globe-earth {
+  animation: project-globe-spin var(--globe-spin-duration, 36s) linear infinite;
+  will-change: transform;
+}
+
+.project-card {
+  --project-primary: #8b5cf6;
+  --project-accent: #22d3ee;
+}
+
+.project-card:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--project-primary) 35%, transparent),
+    0 20px 60px -20px color-mix(in srgb, var(--project-primary) 40%, transparent);
+}
+
+.project-card:hover::before {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--project-primary) 35%, transparent),
+    transparent 42%,
+    color-mix(in srgb, var(--project-accent) 30%, transparent)
+  );
+}
+
+.project-card-visual:hover .project-globe-core {
+  transform: scale(1.1);
+}
+
+.project-card-visual:hover .project-orbit-spin,
+.project-card-visual:hover .project-orbit-icons {
+  animation-duration: calc(var(--orbit-duration, 20s) * 0.72);
+}
+
+.project-globe-core {
+  transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.project-card-shine {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.project-card-visual:hover .project-card-shine {
+  opacity: 1;
+}
+
+.project-star {
+  animation: project-star-twinkle var(--twinkle-duration, 3s) ease-in-out infinite;
+  animation-delay: var(--twinkle-delay, 0s);
+}
+
+@keyframes project-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.project-globe-ring {
+  transform: rotateX(72deg);
+  transform-style: preserve-3d;
+}
+
+.project-orbit-tilt {
+  transform: rotateX(68deg) rotateZ(-4deg);
+  transform-style: preserve-3d;
+}
+
+.project-card-visual:hover .project-globe-earth {
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.55),
+    inset -8px -6px 18px rgba(0, 0, 0, 0.45),
+    0 0 36px var(--globe-glow, rgba(139, 92, 246, 0.35));
+}
+
+.project-globe-paused .project-globe-earth,
+.project-globe-paused .project-orbit-spin,
+.project-globe-paused .project-orbit-icons {
+  animation-play-state: paused;
+}
+
+@keyframes project-shimmer {
+  0%,
+  100% {
+    background-position: 200% 0;
+  }
+  50% {
+    background-position: -200% 0;
+  }
+}
+
 @keyframes globe-pop {
   from {
     opacity: 0;

@@ -2,9 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState, memo, useCallback } from "react";
 import { NAV_LINKS, SITE } from "@/constants/site";
+import { NavMenu3D } from "@/components/canvas/NavMenu3D";
 import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { ScrollLink } from "@/components/ui/ScrollLink";
@@ -59,21 +59,18 @@ export const Navbar = memo(function Navbar() {
           )}
           aria-label="Main navigation"
         >
-          <Link href="#" className="flex items-center gap-2.5" aria-label="Home">
+          <ScrollLink
+            href="#hero"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+            aria-label="Back to top"
+            onClick={closeMenu}
+          >
             <ProfileAvatar size="xs" shape="rounded" priority className="ring-0" />
             <span className="hidden text-sm font-medium text-muted sm:block">{SITE.name}</span>
-          </Link>
+          </ScrollLink>
 
-          <div className="hidden items-center gap-1 md:flex">
-            {NAV_LINKS.map((link) => (
-              <ScrollLink
-                key={link.href}
-                href={link.href}
-                className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
-              >
-                {link.label}
-              </ScrollLink>
-            ))}
+          <div className="hidden items-center md:flex">
+            <NavMenu3D />
           </div>
 
           <div className="hidden md:block">

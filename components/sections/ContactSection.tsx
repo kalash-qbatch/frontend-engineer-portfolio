@@ -4,11 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Download, Mail, MapPin, Send } from "lucide-react";
 import { FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
-import { useState, memo } from "react";
-import { useForm } from "react-hook-form";
+import { memo } from "react";
+import { useForm, type FieldErrors } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { SITE } from "@/constants/site";
 import { IMAGE_FRAMING } from "@/constants/images";
+import { sendContactEmail } from "@/lib/emailjs";
+import { getContactSubmitErrorMessage } from "@/lib/contact-errors";
 import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -37,7 +40,6 @@ const SOCIAL_LINKS = [
 ];
 
 export const ContactSection = memo(function ContactSection() {
-  const [submitted, setSubmitted] = useState(false);
   const {
     register,
     handleSubmit,
@@ -46,11 +48,29 @@ export const ContactSection = memo(function ContactSection() {
   } = useForm<ContactForm>({ resolver: zodResolver(contactSchema) });
 
   const onSubmit = async (data: ContactForm) => {
-    await new Promise((r) => setTimeout(r, 1000));
-    console.log("Contact form:", data);
-    setSubmitted(true);
-    reset();
-    setTimeout(() => setSubmitted(false), 5000);
+    const toastId = toast.loading("Sending your message…");
+
+    try {
+      await sendContactEmail(data);
+      reset();
+      toast.success("Message sent!", {
+        id: toastId,
+        description: "Thanks for reaching out — I'll get back to you soon.",
+      });
+    } catch (error) {
+      console.error("Contact form error:", error);
+      toast.error("Email failed to send", {
+        id: toastId,
+        description: getContactSubmitErrorMessage(error),
+      });
+    }
+  };
+
+  const onInvalid = (fieldErrors: FieldErrors<ContactForm>) => {
+    const firstError = Object.values(fieldErrors).find((field) => field?.message)?.message;
+    toast.error("Please fix the form errors", {
+      description: firstError ?? "Check the highlighted fields and try again.",
+    });
   };
 
   return (
@@ -146,7 +166,7 @@ export const ContactSection = memo(function ContactSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={defaultTransition}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, onInvalid)}
             className="card-glow space-y-5 rounded-2xl p-6 md:p-8 lg:col-span-3"
             noValidate
           >
@@ -173,7 +193,9 @@ export const ContactSection = memo(function ContactSection() {
               {errors.message && <p className="text-xs text-red-400">{errors.message.message}</p>}
             </div>
             <Button type="submit" disabled={isSubmitting} className="w-full" variant="default">
-              {isSubmitting ? "Sending…" : submitted ? "Sent ✓" : (
+              {isSubmitting ? (
+                "Sending…"
+              ) : (
                 <>
                   <Send size={16} />
                   Send message

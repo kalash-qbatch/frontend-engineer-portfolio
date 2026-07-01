@@ -1,6 +1,6 @@
 type WebGLPriority = "hero" | "default";
 
-const MAX_ACTIVE_CONTEXTS = 1;
+const MAX_ACTIVE_CONTEXTS = 2;
 
 let supported: boolean | null = null;
 let activeCount = 0;

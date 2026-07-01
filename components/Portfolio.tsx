@@ -10,6 +10,10 @@ import { LenisProvider } from "@/hooks/useLenis";
 import { useIdleMount } from "@/hooks/useIdleMount";
 import { LenisResizeOnMount } from "@/components/layout/LenisResizeOnMount";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { ScrollStorySection } from "@/components/sections/ScrollStorySection";
+import { ProjectsSection } from "@/components/sections/ProjectsSection";
+import { ContactSection } from "@/components/sections/ContactSection";
+import { isHeroBlobReady, subscribeHeroBlobReady } from "@/lib/hero-blob-ready";
 import { cn } from "@/lib/utils";
 
 function loadNamed<P extends Record<string, unknown>, K extends keyof P>(key: K) {
@@ -51,26 +55,10 @@ const NoiseOverlay = dynamic(
   { ssr: false }
 );
 
-const ScrollStorySection = dynamic(
-  () =>
-    import("@/components/sections/ScrollStorySection").then(loadNamed("ScrollStorySection")),
-  { loading: () => <SectionFallback minHeight="90vh" className="mx-auto max-w-7xl px-5 md:px-8" /> }
-);
-
-const ProjectsSection = dynamic(
-  () => import("@/components/sections/ProjectsSection").then(loadNamed("ProjectsSection")),
-  { loading: () => <SectionFallback minHeight="60vh" className="mx-auto max-w-7xl px-5 md:px-8" /> }
-);
-
 const TestimonialsSection = dynamic(
   () =>
     import("@/components/sections/TestimonialsSection").then(loadNamed("TestimonialsSection")),
   { loading: () => <SectionFallback minHeight="40vh" className="mx-auto max-w-7xl px-5 md:px-8" /> }
-);
-
-const ContactSection = dynamic(
-  () => import("@/components/sections/ContactSection").then(loadNamed("ContactSection")),
-  { loading: () => <SectionFallback minHeight="55vh" className="mx-auto max-w-7xl px-5 md:px-8" /> }
 );
 
 const EndingSection = dynamic(
@@ -80,11 +68,14 @@ const EndingSection = dynamic(
 
 export default function Portfolio() {
   const [bootDone, setBootDone] = useState(false);
+  const [heroBlobReady, setHeroBlobReady] = useState(isHeroBlobReady);
   const idleReady = useIdleMount(bootDone);
 
   useEffect(() => {
     void import("@/components/canvas/HeroBlobScene");
   }, []);
+
+  useEffect(() => subscribeHeroBlobReady(() => setHeroBlobReady(true)), []);
 
   return (
     <LazyMotionProvider>
@@ -99,17 +90,17 @@ export default function Portfolio() {
           <NoiseOverlay />
           <Navbar />
           <main id="main-content" className="relative z-[2]">
-            <HeroSection />
-            <LazySection minHeight="120vh" rootMargin="480px 0px">
+            <HeroSection blobPreload={!bootDone} />
+            <LazySection eager minHeight="120vh" rootMargin="480px 0px">
               <ScrollStorySection />
             </LazySection>
-            <LazySection minHeight="60vh" rootMargin="400px 0px">
+            <LazySection eager minHeight="60vh" rootMargin="400px 0px">
               <ProjectsSection />
             </LazySection>
             <LazySection minHeight="40vh" rootMargin="320px 0px">
               <TestimonialsSection />
             </LazySection>
-            <LazySection minHeight="55vh" rootMargin="320px 0px">
+            <LazySection eager minHeight="55vh" rootMargin="320px 0px">
               <ContactSection />
             </LazySection>
             <LazySection minHeight="35vh" rootMargin="240px 0px">
@@ -121,7 +112,9 @@ export default function Portfolio() {
             {idleReady && <CommandPalette />}
           </Suspense>
         </div>
-        {!bootDone && <BootLoader onComplete={() => setBootDone(true)} />}
+        {!bootDone && (
+          <BootLoader canComplete={heroBlobReady} onComplete={() => setBootDone(true)} />
+        )}
       </LenisProvider>
     </LazyMotionProvider>
   );

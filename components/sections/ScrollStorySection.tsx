@@ -10,6 +10,7 @@ import { SERVICES } from "@/constants/services";
 import { SKILLS } from "@/constants/skills";
 import { StoryChapter } from "@/components/scroll/StoryChapter";
 import { Badge } from "@/components/ui/badge";
+import { AboutStatsGrid } from "@/components/ui/AnimatedStat";
 import { ScrollStoryProvider } from "@/hooks/useScrollStory";
 
 const ScrollPortrait = dynamic(
@@ -48,16 +49,7 @@ const AboutContent = memo(function AboutContent() {
         .
       </p>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {STATS.map((stat) => (
-          <div key={stat.label} className="card-glow rounded-xl p-4 text-center">
-            <p className="font-display text-2xl font-bold">{stat.value}</p>
-            <p className="mt-1 font-mono text-[9px] tracking-widest text-muted uppercase">
-              {stat.label}
-            </p>
-          </div>
-        ))}
-      </div>
+      <AboutStatsGrid stats={STATS} />
 
       <div className="flex flex-wrap gap-2">
         {ABOUT_SKILLS.map((s) => (
