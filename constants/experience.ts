@@ -1,4 +1,5 @@
 import { FaBriefcase, FaGraduationCap } from "react-icons/fa";
+import type { IconType } from "react-icons";
 
 export interface TimelineItem {
   id: string;
@@ -6,8 +7,11 @@ export interface TimelineItem {
   title: string;
   organization: string;
   period: string;
+  tag: string;
   description: string;
-  icon: typeof FaBriefcase;
+  highlights: string[];
+  icon: IconType;
+  color: string;
 }
 
 export const EXPERIENCE: TimelineItem[] = [
@@ -17,9 +21,12 @@ export const EXPERIENCE: TimelineItem[] = [
     title: "Senior Frontend Engineer",
     organization: "Vercel",
     period: "2023 — Present",
+    tag: "Vercel",
     description:
       "Leading frontend architecture for developer tools. Built interactive 3D experiences, optimized bundle sizes by 40%, and mentored junior engineers.",
+    highlights: ["3D dev tools", "40% bundle reduction", "Team mentorship"],
     icon: FaBriefcase,
+    color: "#8B5CF6",
   },
   {
     id: "exp-2",
@@ -27,9 +34,12 @@ export const EXPERIENCE: TimelineItem[] = [
     title: "Frontend Engineer",
     organization: "Stripe",
     period: "2021 — 2023",
+    tag: "Stripe",
     description:
       "Developed payment dashboard components used by millions. Implemented complex data visualizations and accessibility improvements across the platform.",
+    highlights: ["Payment dashboards", "Data visualization", "A11y improvements"],
     icon: FaBriefcase,
+    color: "#635BFF",
   },
   {
     id: "exp-3",
@@ -37,9 +47,12 @@ export const EXPERIENCE: TimelineItem[] = [
     title: "UI Developer",
     organization: "Freelance",
     period: "2019 — 2021",
+    tag: "Freelance",
     description:
-      "Delivered premium web experiences for startups and agencies. Specialized in React, animation, and performance optimization.",
+      "Delivered premium web experiences for startups and agencies. Specialized in React, Vue, Gatsby, animation, and performance optimization.",
+    highlights: ["React · Vue · Gatsby", "Agency delivery", "Performance tuning"],
     icon: FaBriefcase,
+    color: "#22D3EE",
   },
   {
     id: "edu-1",
@@ -47,8 +60,11 @@ export const EXPERIENCE: TimelineItem[] = [
     title: "B.S. Computer Science",
     organization: "Stanford University",
     period: "2015 — 2019",
+    tag: "Education",
     description:
       "Focus on human-computer interaction and graphics programming. Dean's List, ACM chapter president.",
+    highlights: ["HCI focus", "Graphics programming", "Dean's List"],
     icon: FaGraduationCap,
+    color: "#F59E0B",
   },
 ];

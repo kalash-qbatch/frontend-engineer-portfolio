@@ -2,11 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { memo, type ReactNode } from "react";
-import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { EXPERIENCE } from "@/constants/experience";
+import { ExperienceShowcase } from "@/components/sections/ExperienceShowcase";
 import { SCROLL_CHAPTERS } from "@/constants/scrollStory";
-import { SERVICES } from "@/constants/services";
+import { ServicesShowcase } from "@/components/sections/ServicesShowcase";
 import { SKILLS } from "@/constants/skills";
 import { StoryChapter } from "@/components/scroll/StoryChapter";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +40,7 @@ const AboutContent = memo(function AboutContent() {
   return (
     <div className="space-y-6">
       <p className="text-sm leading-[1.85] text-muted md:text-base">
-        I specialize in production-grade React & Next.js with immersive 3D layers and
+        I specialize in production-grade React, Next.js, Vue, and Gatsby applications with immersive 3D layers and
         scroll-driven narratives. Every interaction respects accessibility — including{" "}
         <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-foreground">
           prefers-reduced-motion
@@ -77,63 +76,11 @@ const SkillsContent = memo(function SkillsContent() {
 });
 
 const ExperienceContent = memo(function ExperienceContent() {
-  return (
-    <div className="space-y-4">
-      {EXPERIENCE.map((item, i) => {
-        const Icon = item.icon;
-        return (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, x: -12 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.06 }}
-            className="card-glow rounded-xl p-5"
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border">
-                <Icon size={14} className="text-muted" />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-base font-bold">{item.title}</h3>
-                  <span className="font-mono text-[10px] text-accent">{item.period}</span>
-                </div>
-                <p className="text-sm text-muted">{item.organization}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted/80">{item.description}</p>
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
+  return <ExperienceShowcase />;
 });
 
 const ServicesContent = memo(function ServicesContent() {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {SERVICES.map((service, i) => {
-        const Icon = service.icon;
-        return (
-          <motion.div
-            key={service.id}
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.05 }}
-            className="card-glow rounded-xl p-5"
-          >
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface">
-              <Icon size={16} />
-            </div>
-            <h3 className="font-display text-sm font-bold">{service.title}</h3>
-            <p className="mt-2 text-xs leading-relaxed text-muted">{service.description}</p>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
+  return <ServicesShowcase />;
 });
 
 const CHAPTER_CONTENT: Record<string, ReactNode> = {

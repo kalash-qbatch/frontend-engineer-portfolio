@@ -50,7 +50,7 @@ export const Footer = memo(function Footer() {
             © {new Date().getFullYear()} {SITE.name}
           </p>
           <p className="font-mono text-[11px] text-muted/40">
-            Next.js · Three.js · Framer Motion
+            React · Vue · Gatsby · Three.js
           </p>
         </div>
       </div>

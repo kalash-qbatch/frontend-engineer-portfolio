@@ -5,7 +5,6 @@ import type { Project } from "@/constants/projects";
 import { resolveProjectTags } from "@/constants/projectTags";
 import { EARTH_MAP } from "@/constants/images";
 import { getProjectVisual } from "@/constants/projectVisuals";
-import { getSkillIconColor } from "@/constants/skills";
 import { Badge } from "@/components/ui/badge";
 import { useInView } from "@/hooks/useInView";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -28,7 +27,7 @@ const STARS = [
 function tagIconColor(color: string) {
   const normalized = color.toLowerCase();
   if (normalized === "#ffffff" || normalized === "#fff") return "#f4f4f5";
-  return getSkillIconColor(color);
+  return color;
 }
 
 function Starfield() {

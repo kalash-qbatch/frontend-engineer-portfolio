@@ -4,11 +4,13 @@ import {
   SiTypescript,
   SiJavascript,
   SiTailwindcss,
+  SiVuedotjs,
+  SiGatsby,
   SiThreedotjs,
   SiNodedotjs,
   SiGit,
 } from "react-icons/si";
-import { TbApi, TbAccessible, TbRocket, TbSparkles } from "react-icons/tb";
+import { TbApi, TbAccessible, TbCode, TbRocket, TbServer, TbSparkles, TbTool } from "react-icons/tb";
 import { IconType } from "react-icons";
 
 export type SkillCategory = "frontend" | "animations" | "backend" | "tools";
@@ -27,6 +29,8 @@ export const SKILLS: Skill[] = [
   { name: "TypeScript", icon: SiTypescript, category: "frontend", level: 90, color: "#3178C6" },
   { name: "JavaScript", icon: SiJavascript, category: "frontend", level: 95, color: "#F7DF1E" },
   { name: "Tailwind", icon: SiTailwindcss, category: "frontend", level: 93, color: "#06B6D4" },
+  { name: "Vue.js", icon: SiVuedotjs, category: "frontend", level: 86, color: "#4FC08D" },
+  { name: "Gatsby", icon: SiGatsby, category: "frontend", level: 82, color: "#663399" },
   { name: "Three.js", icon: SiThreedotjs, category: "animations", level: 85, color: "#ffffff" },
   { name: "R3F", icon: SiThreedotjs, category: "animations", level: 82, color: "#8B5CF6" },
   { name: "Framer Motion", icon: TbSparkles, category: "animations", level: 90, color: "#BB4B96" },
@@ -38,12 +42,67 @@ export const SKILLS: Skill[] = [
   { name: "Accessibility", icon: TbAccessible, category: "tools", level: 85, color: "#A78BFA" },
 ];
 
-export const SKILL_CATEGORIES: { id: SkillCategory; label: string }[] = [
-  { id: "frontend", label: "Frontend" },
-  { id: "animations", label: "Animations" },
-  { id: "backend", label: "Backend" },
-  { id: "tools", label: "Tools" },
+export interface SkillCategoryMeta {
+  id: SkillCategory;
+  label: string;
+  color: string;
+  description: string;
+  icon: IconType;
+}
+
+export const SKILL_CATEGORIES: SkillCategoryMeta[] = [
+  {
+    id: "frontend",
+    label: "Frontend",
+    color: "#61DAFB",
+    description: "React, Next.js, Vue, Gatsby, and type-safe UI systems.",
+    icon: TbCode,
+  },
+  {
+    id: "animations",
+    label: "Animations",
+    color: "#EC4899",
+    description: "Motion libraries, WebGL, and scroll narratives.",
+    icon: TbSparkles,
+  },
+  {
+    id: "backend",
+    label: "Backend",
+    color: "#4ADE80",
+    description: "APIs, Node.js, and full-stack integration.",
+    icon: TbServer,
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    color: "#22D3EE",
+    description: "Git, performance, and accessibility workflows.",
+    icon: TbTool,
+  },
 ];
+
+export function getSkillsByCategory(category: SkillCategory): Skill[] {
+  return SKILLS.filter((s) => s.category === category);
+}
+
+export const SKILLS_BY_CATEGORY: Record<SkillCategory, Skill[]> = {
+  frontend: getSkillsByCategory("frontend"),
+  animations: getSkillsByCategory("animations"),
+  backend: getSkillsByCategory("backend"),
+  tools: getSkillsByCategory("tools"),
+};
+
+export function getCategoryMeta(category: SkillCategory): SkillCategoryMeta {
+  return SKILL_CATEGORIES.find((c) => c.id === category) ?? SKILL_CATEGORIES[0];
+}
+
+export function getCategoryColor(category: SkillCategory): string {
+  return SKILL_CATEGORIES.find((c) => c.id === category)?.color ?? "#8B5CF6";
+}
+
+export function getCategoryLabel(category: SkillCategory): string {
+  return SKILL_CATEGORIES.find((c) => c.id === category)?.label ?? category;
+}
 
 function parseHex(color: string) {
   const hex = color.replace("#", "");

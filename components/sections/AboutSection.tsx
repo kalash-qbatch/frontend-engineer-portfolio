@@ -54,7 +54,7 @@ export function AboutSection() {
           {/* Bio */}
           <BentoCard className="md:col-span-7" delay={0.05}>
             <p className="text-base leading-[1.8] text-muted md:text-lg">
-              I specialize in production-grade React & Next.js applications with immersive 3D
+              I specialize in production-grade React, Next.js, Vue, and Gatsby applications with immersive 3D
               layers, scroll-driven narratives, and micro-interactions that respect{" "}
               <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-foreground">
                 prefers-reduced-motion

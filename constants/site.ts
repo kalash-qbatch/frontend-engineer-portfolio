@@ -13,10 +13,10 @@ export const SITE = {
   linkedin: "https://linkedin.com",
   twitter: "https://twitter.com",
   description:
-    "Elite Frontend Engineer specializing in modern web experiences — React, Next.js, Three.js, and motion design.",
-  seoTitle: "Palus Allah Rakha — Frontend Engineer | React, Next.js & WebGL",
+    "Elite Frontend Engineer specializing in modern web experiences — React, Next.js, Vue, Gatsby, Three.js, and motion design.",
+  seoTitle: "Palus Allah Rakha — Frontend Engineer | React, Next.js, Vue & WebGL",
   seoDescription:
-    "Palus Allah Rakha is a Frontend Engineer from Lahore, Pakistan, building fast, accessible, and immersive web experiences with React, Next.js, Three.js, WebGL, and motion design.",
+    "Palus Allah Rakha is a Frontend Engineer from Lahore, Pakistan, building fast, accessible, and immersive web experiences with React, Next.js, Vue, Gatsby, Three.js, WebGL, and motion design.",
   seoImage: PORTFOLIO_IMAGES.professional,
   locale: "en_US",
   twitterHandle: "@palusallahrakha",

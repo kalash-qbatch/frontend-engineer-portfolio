@@ -8,24 +8,26 @@ import * as THREE from "three";
 import { SafeCanvas } from "@/components/canvas/SafeCanvas";
 import type { Skill } from "@/constants/skills";
 import { getSkillIconColor } from "@/constants/skills";
+import { EARTH_MAP } from "@/constants/images";
 import { cn } from "@/lib/utils";
-
-const EARTH_MAP =
-  "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg";
-const EARTH_NORMAL =
-  "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg";
-const EARTH_SPECULAR =
-  "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg";
 
 const GLOBE_RADIUS = 1;
 const ORBIT_RADIUS = 1.45;
 const ORBIT_TILT = 0.28;
 const BASE_ORBIT_SPEED = 0.2;
 
+const EARTH_GEOMETRY = new THREE.SphereGeometry(GLOBE_RADIUS, 32, 32);
+const ATMOSPHERE_GEOMETRY = new THREE.SphereGeometry(GLOBE_RADIUS, 24, 24);
+const ORBIT_GEOMETRY = new THREE.TorusGeometry(ORBIT_RADIUS, 0.004, 6, 64);
+
 const _worldPos = new THREE.Vector3();
 const _earthCenter = new THREE.Vector3();
 const _toPin = new THREE.Vector3();
 const _toCamera = new THREE.Vector3();
+
+function getOrbitAngle(index: number, total: number) {
+  return (index / Math.max(total, 1)) * Math.PI * 2;
+}
 
 const OrbitSkillPin = memo(function OrbitSkillPin({
   skill,
@@ -43,32 +45,22 @@ const OrbitSkillPin = memo(function OrbitSkillPin({
   onHover: (name: string | null) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const angle = useRef({ value: (index / Math.max(total, 1)) * Math.PI * 2 });
   const scale = useRef({ value: 1 });
-  const lastOpacity = useRef(1);
+  const lastBehind = useRef(false);
+  const [hovered, setHovered] = useState(false);
+  const [behind, setBehind] = useState(false);
   const Icon = skill.icon;
   const iconColor = getSkillIconColor(skill.color);
-  const [hovered, setHovered] = useState(false);
-  const [opacity, setOpacity] = useState(1);
   const lit = active || hovered;
-
-  useEffect(() => {
-    const target = (index / Math.max(total, 1)) * Math.PI * 2;
-    gsap.to(angle.current, {
-      value: target,
-      duration: 0.75,
-      ease: "power2.inOut",
-      overwrite: true,
-    });
-  }, [index, total]);
+  const angle = getOrbitAngle(index, total);
 
   useEffect(() => {
     scale.current.value = 0;
     gsap.to(scale.current, {
       value: 1,
-      duration: 0.5,
-      delay: index * 0.04,
-      ease: "back.out(1.6)",
+      duration: 0.45,
+      delay: index * 0.03,
+      ease: "back.out(1.5)",
       overwrite: true,
     });
   }, [skill.name, index]);
@@ -76,39 +68,36 @@ const OrbitSkillPin = memo(function OrbitSkillPin({
   useFrame((state) => {
     if (!groupRef.current) return;
 
-    const a = angle.current.value;
-    groupRef.current.position.set(
-      Math.cos(a) * ORBIT_RADIUS,
-      0,
-      Math.sin(a) * ORBIT_RADIUS
-    );
     groupRef.current.scale.setScalar(scale.current.value);
 
     groupRef.current.getWorldPosition(_worldPos);
     earthRef.current?.getWorldPosition(_earthCenter);
-
     _toPin.copy(_worldPos).sub(_earthCenter);
     _toCamera.copy(state.camera.position).sub(_earthCenter);
-    const facing = _toPin.dot(_toCamera);
-    const next = THREE.MathUtils.clamp((facing + 0.02) / 0.35, 0, 1);
+    const isBehind = _toPin.dot(_toCamera) < 0.05;
 
-    if (Math.abs(lastOpacity.current - next) > 0.03) {
-      lastOpacity.current = next;
-      setOpacity(next);
+    if (lastBehind.current !== isBehind) {
+      lastBehind.current = isBehind;
+      setBehind(isBehind);
     }
   });
 
-  const show = opacity > 0.08;
-
   return (
-    <group ref={groupRef}>
+    <group
+      ref={groupRef}
+      position={[
+        Math.cos(angle) * ORBIT_RADIUS,
+        0,
+        Math.sin(angle) * ORBIT_RADIUS,
+      ]}
+    >
       <Html
         center
         distanceFactor={9}
-        zIndexRange={[lit ? 50 : 20, 0]}
+        zIndexRange={[lit ? 40 : 10, 0]}
         style={{
-          pointerEvents: show ? "auto" : "none",
-          opacity,
+          opacity: behind ? 0 : 1,
+          pointerEvents: behind ? "none" : "auto",
           transition: "opacity 0.2s ease",
         }}
       >
@@ -140,42 +129,28 @@ const OrbitSkillPin = memo(function OrbitSkillPin({
   );
 });
 
-function EarthMesh() {
-  const [colorMap, normalMap, specularMap] = useTexture([
-    EARTH_MAP,
-    EARTH_NORMAL,
-    EARTH_SPECULAR,
-  ]);
+const EarthMesh = memo(function EarthMesh() {
+  const colorMap = useTexture(EARTH_MAP);
 
   return (
     <group>
-      <mesh renderOrder={2}>
-        <sphereGeometry args={[GLOBE_RADIUS, 64, 64]} />
-        <meshPhongMaterial
-          map={colorMap}
-          normalMap={normalMap}
-          specularMap={specularMap}
-          specular={new THREE.Color("#555555")}
-          shininess={20}
-        />
+      <mesh geometry={EARTH_GEOMETRY} renderOrder={10}>
+        <meshPhongMaterial map={colorMap} shininess={12} specular="#333333" />
       </mesh>
-
-      <mesh scale={1.07}>
-        <sphereGeometry args={[GLOBE_RADIUS, 32, 32]} />
+      <mesh geometry={ATMOSPHERE_GEOMETRY} scale={1.06} renderOrder={9}>
         <meshBasicMaterial
           color="#93c5fd"
           transparent
-          opacity={0.11}
+          opacity={0.1}
           side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
     </group>
   );
-}
+});
 
-function GlobeContent({
+function GlobeRig({
   skills,
   highlighted,
   transitionKey,
@@ -194,13 +169,13 @@ function GlobeContent({
   useEffect(() => {
     gsap.fromTo(
       orbitSpeed.current,
-      { value: BASE_ORBIT_SPEED * 2.4 },
-      { value: BASE_ORBIT_SPEED, duration: 1.1, ease: "power3.out", overwrite: true }
+      { value: BASE_ORBIT_SPEED * 2 },
+      { value: BASE_ORBIT_SPEED, duration: 0.9, ease: "power3.out", overwrite: true }
     );
     gsap.fromTo(
       earthScale.current,
-      { value: 0.88 },
-      { value: 1, duration: 0.7, ease: "back.out(1.4)", overwrite: true }
+      { value: 0.9 },
+      { value: 1, duration: 0.55, ease: "back.out(1.3)", overwrite: true }
     );
   }, [transitionKey]);
 
@@ -215,20 +190,14 @@ function GlobeContent({
   });
 
   return (
-    <group position={[0, 0, 0]}>
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[5, 3, 6]} intensity={1.65} color="#ffffff" />
-      <directionalLight position={[-4, -1, -4]} intensity={0.3} color="#ddd6fe" />
-      <pointLight position={[0, 0, 4]} intensity={0.45} color="#bfdbfe" />
-
-      <group ref={earthRef}>
-        <EarthMesh />
-      </group>
+    <group>
+      <ambientLight intensity={0.85} />
+      <directionalLight position={[5, 3, 6]} intensity={1.5} />
+      <directionalLight position={[-4, -1, -4]} intensity={0.25} color="#ddd6fe" />
 
       <group ref={orbitRef} rotation={[ORBIT_TILT, 0, 0]}>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[ORBIT_RADIUS, 0.004, 8, 128]} />
-          <meshBasicMaterial color="#93c5fd" transparent opacity={0.18} />
+        <mesh geometry={ORBIT_GEOMETRY} rotation={[Math.PI / 2, 0, 0]} renderOrder={0}>
+          <meshBasicMaterial color="#93c5fd" transparent opacity={0.16} depthWrite={false} />
         </mesh>
 
         {skills.map((skill, i) => (
@@ -243,50 +212,52 @@ function GlobeContent({
           />
         ))}
       </group>
+
+      <group ref={earthRef}>
+        <EarthMesh />
+      </group>
     </group>
   );
 }
 
 export function GlobeFallback({ skills, transitionKey }: { skills: Skill[]; transitionKey: string }) {
-  const orbitSkills = skills.slice(0, 10);
   const orbitRadius = 76;
 
   return (
     <div className="relative flex h-full w-full items-center justify-center">
+      <div className="pointer-events-none absolute h-[152px] w-[152px] rounded-full border border-sky-400/20" />
+      <div
+        key={`${transitionKey}-orbit`}
+        className="absolute z-0 h-[152px] w-[152px] animate-[spin_22s_linear_infinite]"
+      >
+        {skills.map((skill, i) => {
+          const Icon = skill.icon;
+          const iconColor = getSkillIconColor(skill.color);
+          const deg = (i / Math.max(skills.length, 1)) * 360;
+
+          return (
+            <div
+              key={skill.name}
+              className="absolute left-1/2 top-1/2 origin-center"
+              style={{ transform: `rotate(${deg}deg) translateY(-${orbitRadius}px)` }}
+            >
+              <div className="animate-[spin_22s_linear_infinite_reverse]">
+                <span
+                  className="flex h-5 w-5 items-center justify-center rounded-full border border-black/10 bg-white shadow-md animate-[orbit-pin-in_0.5s_ease-out_both]"
+                  style={{ animationDelay: `${i * 0.03}s` }}
+                >
+                  <Icon size={9} style={{ color: iconColor }} />
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
       <div
         key={transitionKey}
-        className="relative z-10 h-28 w-28 animate-[globe-pop_0.7s_ease-out] rounded-full bg-cover bg-center shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
+        className="relative z-10 h-28 w-28 animate-[globe-pop_0.7s_ease-out] rounded-full bg-cover bg-center shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-black/30"
         style={{ backgroundImage: `url(${EARTH_MAP})` }}
       />
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="absolute h-[152px] w-[152px] rounded-full border border-sky-400/20" />
-        <div
-          key={`${transitionKey}-orbit`}
-          className="absolute h-[152px] w-[152px] animate-[spin_22s_linear_infinite]"
-        >
-          {orbitSkills.map((skill, i) => {
-            const Icon = skill.icon;
-            const iconColor = getSkillIconColor(skill.color);
-            const deg = (i / orbitSkills.length) * 360;
-            return (
-              <div
-                key={skill.name}
-                className="absolute left-1/2 top-1/2 origin-center"
-                style={{ transform: `rotate(${deg}deg) translateY(-${orbitRadius}px)` }}
-              >
-                <div className="animate-[spin_22s_linear_infinite_reverse]">
-                  <span
-                    className="flex h-4 w-4 items-center justify-center rounded-full border border-black/10 bg-white shadow-md animate-[orbit-pin-in_0.5s_ease-out_both]"
-                    style={{ animationDelay: `${i * 0.04}s` }}
-                  >
-                    <Icon size={8} style={{ color: iconColor }} />
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
@@ -310,21 +281,25 @@ export function SkillGlobeScene({
   const stableSkills = useMemo(() => skills, [skills]);
 
   return (
-    <SafeCanvas
-      className={className}
-      fallback={<GlobeFallback skills={stableSkills} transitionKey={transitionKey} />}
-      camera={{ position: [0, 0, 3.2], fov: 46 }}
-      dpr={[1, 1.25]}
-      frameloop="always"
-      gl={{ alpha: true }}
-      style={{ background: "transparent" }}
-    >
-      <GlobeContent
-        skills={stableSkills}
-        highlighted={highlighted}
-        transitionKey={transitionKey}
-        onHover={handleHover}
-      />
-    </SafeCanvas>
+    <div className={cn("relative h-full w-full", className)}>
+      <SafeCanvas
+        className="h-full w-full"
+        fallback={
+          <GlobeFallback skills={stableSkills} transitionKey={transitionKey} />
+        }
+        camera={{ position: [0, 0, 3.2], fov: 46 }}
+        dpr={[1, 1.15]}
+        frameloop="always"
+        gl={{ alpha: true, antialias: false }}
+        style={{ background: "transparent" }}
+      >
+        <GlobeRig
+          skills={stableSkills}
+          highlighted={highlighted}
+          transitionKey={transitionKey}
+          onHover={handleHover}
+        />
+      </SafeCanvas>
+    </div>
   );
 }

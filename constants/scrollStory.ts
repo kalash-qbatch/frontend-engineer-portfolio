@@ -71,7 +71,7 @@ export const SCROLL_CHAPTERS: ScrollChapter[] = [
     title: "Tools I reach for daily",
     caption: "The stack",
     description:
-      "React, Next.js, WebGL, and motion libraries — chosen for speed, DX, and polish.",
+      "React, Next.js, Vue, Gatsby, WebGL, and motion libraries — chosen for speed, DX, and polish.",
     side: "right",
     scale: 1.05,
     rotate: 2,

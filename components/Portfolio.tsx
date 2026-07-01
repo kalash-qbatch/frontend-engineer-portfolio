@@ -20,11 +20,6 @@ function loadNamed<P extends Record<string, unknown>, K extends keyof P>(key: K)
   return (mod: P) => ({ default: mod[key] as ComponentType });
 }
 
-const CustomCursor = dynamic(
-  () => import("@/components/layout/CustomCursor").then(loadNamed("CustomCursor")),
-  { ssr: false }
-);
-
 const CommandPalette = dynamic(
   () => import("@/components/layout/CommandPalette").then(loadNamed("CommandPalette")),
   { ssr: false }
@@ -82,9 +77,6 @@ export default function Portfolio() {
       <LenisProvider enabled={bootDone}>
         <LenisResizeOnMount />
         <div className={cn(!bootDone && "h-[100dvh] overflow-hidden")}>
-          <Suspense fallback={null}>
-            {idleReady && <CustomCursor />}
-          </Suspense>
           <ScrollProgress />
           <SiteBackground />
           <NoiseOverlay />

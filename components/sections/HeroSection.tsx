@@ -207,7 +207,7 @@ export const HeroSection = memo(function HeroSection({
             transition={{ duration: 0.7, ease: EASE, delay: 1 }}
             className="mt-6 max-w-lg text-base leading-relaxed text-muted md:text-lg"
           >
-            {SITE.tagline} Crafting fast, expressive web experiences with React, WebGL, and motion.
+            {SITE.tagline} Crafting fast, expressive web experiences with React, Next.js, Vue, Gatsby, WebGL, and motion.
           </motion.p>
 
           <motion.div

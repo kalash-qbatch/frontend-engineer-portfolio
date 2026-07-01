@@ -2,7 +2,6 @@
 
 import { memo, useMemo } from "react";
 import { resolveProjectTags } from "@/constants/projectTags";
-import { getSkillIconColor } from "@/constants/skills";
 import { cn } from "@/lib/utils";
 
 type ProjectTechStackProps = {
@@ -14,7 +13,7 @@ type ProjectTechStackProps = {
 function tagIconColor(color: string) {
   const normalized = color.toLowerCase();
   if (normalized === "#ffffff" || normalized === "#fff") return "#f4f4f5";
-  return getSkillIconColor(color);
+  return color;
 }
 
 export const ProjectTechStack = memo(function ProjectTechStack({

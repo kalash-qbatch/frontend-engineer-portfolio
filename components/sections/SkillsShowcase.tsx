@@ -1,168 +1,300 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { memo, useCallback, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
+import { memo, useCallback, useState } from "react";
 import { SkillCarousel } from "@/components/sections/SkillCarousel";
-import { SKILL_CATEGORIES, SKILLS, getSkillIconColor, type Skill, type SkillCategory } from "@/constants/skills";
+import {
+  SKILL_CATEGORIES,
+  SKILLS,
+  SKILLS_BY_CATEGORY,
+  getCategoryColor,
+  getCategoryMeta,
+  type Skill,
+  type SkillCategory,
+} from "@/constants/skills";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { EASE, STAGGER } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-type Tab = SkillCategory | "all";
+const MARQUEE_ITEMS = SKILLS.map((s) => s.name);
 
-const TABS: Tab[] = ["all", ...SKILL_CATEGORIES.map((c) => c.id)];
+function SkillsMarquee() {
+  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
 
-function tabLabel(tab: Tab) {
-  if (tab === "all") return "All";
-  return SKILL_CATEGORIES.find((c) => c.id === tab)?.label ?? tab;
+  return (
+    <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+      <div className="animate-marquee flex shrink-0 items-center gap-6 whitespace-nowrap">
+        {items.map((item, i) => (
+          <span key={`${item}-${i}`} className="flex items-center gap-6">
+            <span className="font-mono text-[10px] tracking-[0.22em] text-muted/70 uppercase">
+              {item}
+            </span>
+            <span className="h-1 w-1 rounded-full bg-accent/50" aria-hidden />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-const chipVariants = {
-  hidden: { opacity: 0, scale: 0.82, y: 10, filter: "blur(6px)" },
-  visible: (i: number) => ({
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.4, delay: i * STAGGER.tight, ease: EASE },
-  }),
-  exit: {
-    opacity: 0,
-    scale: 0.86,
-    y: -6,
-    filter: "blur(4px)",
-    transition: { duration: 0.25, ease: EASE },
-  },
-};
+const ProficiencyRing = memo(function ProficiencyRing({
+  level,
+  color,
+  active,
+  reducedMotion,
+}: {
+  level: number;
+  color: string;
+  active: boolean;
+  reducedMotion: boolean;
+}) {
+  const r = 18;
+  const c = 2 * Math.PI * r;
+  const offset = c - (level / 100) * c;
 
-const SkillChip = memo(function SkillChip({
+  return (
+    <svg className="h-11 w-11 shrink-0 -rotate-90" viewBox="0 0 44 44" aria-hidden>
+      <circle cx="22" cy="22" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" />
+      <motion.circle
+        cx="22"
+        cy="22"
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray={c}
+        initial={reducedMotion ? false : { strokeDashoffset: c }}
+        animate={{ strokeDashoffset: offset }}
+        transition={{ duration: reducedMotion ? 0 : 0.8, ease: EASE, delay: 0.08 }}
+        style={{ opacity: active ? 1 : 0.55 }}
+      />
+    </svg>
+  );
+});
+
+const SkillCard = memo(function SkillCard({
   skill,
   active,
+  reducedMotion,
+  index,
+  onHover,
 }: {
   skill: Skill;
   active: boolean;
+  reducedMotion: boolean;
+  index: number;
+  onHover: (name: string | null) => void;
 }) {
   const Icon = skill.icon;
-  const iconColor = getSkillIconColor(skill.color);
 
   return (
-    <motion.span
-      layout
+    <motion.button
+      type="button"
+      initial={reducedMotion ? false : { opacity: 0, y: 12, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={reducedMotion ? undefined : { opacity: 0, y: -8, scale: 0.96 }}
+      transition={{ duration: 0.35, delay: index * STAGGER.tight, ease: EASE }}
+      onMouseEnter={() => onHover(skill.name)}
+      onMouseLeave={() => onHover(null)}
+      onFocus={() => onHover(skill.name)}
+      onBlur={() => onHover(null)}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border py-1 pr-2.5 pl-1.5 text-xs font-medium",
+        "group relative flex w-full items-center gap-3 overflow-hidden rounded-xl border px-3 py-3 text-left transition-all duration-300",
         active
-          ? "border-white/20 bg-white/8 text-foreground shadow-[0_0_20px_-8px_var(--skill)]"
-          : "border-border/70 bg-background/30 text-foreground/90 hover:border-border-hover hover:bg-background/50"
+          ? "border-white/16 bg-white/[0.05] shadow-[0_0_32px_-10px_var(--skill-glow)]"
+          : "border-border/50 bg-background/25 hover:border-border-hover hover:bg-white/[0.03]"
       )}
-      style={{ "--skill": skill.color } as React.CSSProperties}
-      animate={active ? { scale: 1.03 } : { scale: 1 }}
-      transition={{ duration: 0.25, ease: EASE }}
+      style={
+        {
+          "--skill": skill.color,
+          "--skill-glow": `${skill.color}55`,
+        } as React.CSSProperties
+      }
     >
-      <span
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
-        style={{ backgroundColor: `${skill.color}${active ? "28" : "14"}` }}
-      >
-        <Icon size={12} style={{ color: iconColor }} aria-hidden />
-      </span>
-      {skill.name}
-    </motion.span>
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500",
+          active && "opacity-100"
+        )}
+        style={{
+          background: `radial-gradient(ellipse 80% 100% at 0% 50%, ${skill.color}12, transparent 70%)`,
+        }}
+        aria-hidden
+      />
+
+      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+        <ProficiencyRing
+          level={skill.level}
+          color={skill.color}
+          active={active}
+          reducedMotion={reducedMotion}
+        />
+        <span
+          className="absolute flex h-7 w-7 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
+          style={{ backgroundColor: `${skill.color}${active ? "28" : "16"}` }}
+        >
+          <Icon size={14} style={{ color: skill.color }} aria-hidden />
+        </span>
+      </div>
+
+      <div className="relative min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-sm font-medium text-foreground/90">{skill.name}</span>
+          <span
+            className="font-mono text-[10px] tabular-nums transition-colors duration-300"
+            style={{ color: active ? skill.color : "var(--muted)" }}
+          >
+            {skill.level}%
+          </span>
+        </div>
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/8">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ backgroundColor: skill.color }}
+            initial={reducedMotion ? false : { width: 0 }}
+            animate={{ width: `${skill.level}%` }}
+            transition={{ duration: reducedMotion ? 0 : 0.65, ease: EASE, delay: 0.1 + index * 0.04 }}
+          />
+        </div>
+      </div>
+    </motion.button>
   );
 });
 
 export const SkillsShowcase = memo(function SkillsShowcase() {
-  const [activeTab, setActiveTab] = useState<Tab>("all");
+  const reducedMotion = useReducedMotion();
+  const [activeCategory, setActiveCategory] = useState<SkillCategory>("frontend");
   const [highlighted, setHighlighted] = useState<string | null>(null);
 
-  const filtered = useMemo(
-    () => (activeTab === "all" ? SKILLS : SKILLS.filter((s) => s.category === activeTab)),
-    [activeTab]
-  );
+  const categorySkills = SKILLS_BY_CATEGORY[activeCategory];
+  const activeMeta = getCategoryMeta(activeCategory);
+  const activeColor = getCategoryColor(activeCategory);
 
-  const carouselSkills = useMemo(
-    () => (activeTab === "all" ? SKILLS.slice(0, 10) : filtered),
-    [activeTab, filtered]
-  );
-
-  const selectTab = useCallback((tab: Tab) => {
-    setActiveTab(tab);
+  const onSelectCategory = useCallback((id: SkillCategory) => {
+    setActiveCategory(id);
     setHighlighted(null);
   }, []);
 
-  const onHover = useCallback((name: string | null) => setHighlighted(name), []);
+  const onHighlight = useCallback((name: string | null) => setHighlighted(name), []);
 
   return (
     <div className="card-glow overflow-hidden rounded-2xl">
-      <div className="relative h-[240px] overflow-hidden border-b border-border sm:h-[280px]">
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-[#080808] via-transparent to-[#080808]/20" />
-        <SkillCarousel
-          skills={carouselSkills}
-          highlighted={highlighted}
-          transitionKey={activeTab}
-          onHover={onHover}
+      <div className="relative overflow-hidden border-b border-border">
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-cyan-500/8 via-transparent to-violet-600/10"
+          aria-hidden
         />
-        <AnimatePresence>
-          <motion.div
-            key={activeTab}
-            className="pointer-events-none absolute inset-0 z-20 bg-[#080808]"
-            initial={{ opacity: 0.4 }}
-            animate={{ opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-          />
-        </AnimatePresence>
+        <div className="relative py-3.5">
+          <SkillsMarquee />
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 border-b border-border p-3 sm:p-4">
-        {TABS.map((tab) => {
-          const active = activeTab === tab;
+      <div className="relative h-[210px] overflow-hidden border-b border-border sm:h-[260px]">
+        <div
+          className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-[#080808]/30 via-transparent to-[#080808]"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 z-10 transition-[background] duration-700"
+          style={{
+            background: `radial-gradient(ellipse 90% 75% at 50% 85%, ${activeColor}22, transparent 68%)`,
+          }}
+          aria-hidden
+        />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+        <SkillCarousel
+          skills={categorySkills}
+          highlighted={highlighted}
+          transitionKey={activeCategory}
+          accentColor={activeColor}
+          onHover={onHighlight}
+        />
+
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between px-5 pt-4 sm:px-6">
+          <div>
+            <p className="font-mono text-[9px] tracking-[0.2em] text-muted/60 uppercase">
+              Orbiting stack
+            </p>
+            <p className="mt-0.5 font-display text-sm font-bold text-foreground/90">
+              {activeMeta.label}
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-background/50 px-2.5 py-1.5 text-center backdrop-blur-sm">
+            <p className="font-display text-lg font-bold leading-none" style={{ color: activeColor }}>
+              {categorySkills.length}
+            </p>
+            <p className="mt-0.5 font-mono text-[8px] tracking-widest text-muted uppercase">tools</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-1 overflow-x-auto border-b border-border p-3 sm:p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {SKILL_CATEGORIES.map((category) => {
+          const active = activeCategory === category.id;
+          const Icon = category.icon;
           return (
             <button
-              key={tab}
+              key={category.id}
               type="button"
-              onClick={() => selectTab(tab)}
+              onClick={() => onSelectCategory(category.id)}
               className={cn(
-                "relative rounded-lg px-3 py-1.5 font-mono text-[10px] tracking-wide uppercase transition-colors",
+                "relative flex shrink-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 font-mono text-[10px] tracking-wide uppercase transition-colors",
                 active ? "text-background" : "text-muted hover:text-foreground"
               )}
             >
               {active && (
                 <motion.span
-                  layoutId="skill-tab-indicator"
-                  className="absolute inset-0 rounded-lg bg-foreground"
+                  layoutId="skill-category-pill"
+                  className="absolute inset-0 rounded-lg"
+                  style={{ backgroundColor: category.color }}
                   transition={{ type: "spring", stiffness: 420, damping: 32 }}
                 />
               )}
-              <motion.span
-                className="relative z-10"
-                animate={active ? { y: 0 } : { y: 0 }}
-                whileTap={{ scale: 0.94 }}
-              >
-                {tabLabel(tab)}
-              </motion.span>
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Icon size={12} aria-hidden />
+                {category.label}
+              </span>
             </button>
           );
         })}
       </div>
 
-      <div className="overflow-hidden p-3 sm:p-4">
-        <motion.div layout className="flex flex-wrap gap-1.5">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((skill, i) => (
-              <motion.div
-                key={skill.name}
-                layout
-                custom={i}
-                variants={chipVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                onHoverStart={() => setHighlighted(skill.name)}
-                onHoverEnd={() => setHighlighted(null)}
-              >
-                <SkillChip skill={skill} active={highlighted === skill.name} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+      <div className="border-b border-border/50 px-5 py-4 sm:px-6">
+        <p className="text-sm leading-relaxed text-muted">{activeMeta.description}</p>
+      </div>
+
+      <div className="p-3 sm:p-4">
+        <div key={activeCategory} className="grid gap-2 sm:grid-cols-2">
+          {categorySkills.map((skill, i) => (
+            <SkillCard
+              key={skill.name}
+              skill={skill}
+              index={i}
+              active={highlighted === skill.name}
+              reducedMotion={reducedMotion}
+              onHover={onHighlight}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 border-t border-border px-5 py-3.5 sm:px-6">
+        <p className="font-mono text-[10px] tracking-widest text-muted/70 uppercase">
+          {SKILLS.length} skills · 4 stacks
+        </p>
+        <a
+          href="#projects"
+          className="group inline-flex items-center gap-1.5 font-mono text-[10px] tracking-wide text-foreground/80 uppercase transition-colors hover:text-accent"
+        >
+          See in projects
+          <ArrowUpRight
+            size={12}
+            className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          />
+        </a>
       </div>
     </div>
   );
