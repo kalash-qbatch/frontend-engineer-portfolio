@@ -9,6 +9,7 @@ import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { ScrollLink } from "@/components/ui/ScrollLink";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useActiveSection } from "@/hooks/useActiveSection";
 import { EASE, fadeInUp, staggerContainer } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export const Navbar = memo(function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const reducedMotion = useReducedMotion();
+  const activeSection = useActiveSection();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -70,7 +72,7 @@ export const Navbar = memo(function Navbar() {
           </ScrollLink>
 
           <div className="hidden items-center md:flex">
-            <NavMenu3D />
+            <NavMenu3D activeId={activeSection} />
           </div>
 
           <div className="hidden md:block">
@@ -164,7 +166,13 @@ export const Navbar = memo(function Navbar() {
                     <ScrollLink
                       href={link.href}
                       onClick={closeMenu}
-                      className="flex items-center justify-between rounded-xl px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-surface"
+                      aria-current={activeSection === link.href.slice(1) ? "page" : undefined}
+                      className={cn(
+                        "flex items-center justify-between rounded-xl px-3 py-3 text-base font-medium transition-colors hover:bg-surface",
+                        activeSection === link.href.slice(1)
+                          ? "bg-surface text-foreground"
+                          : "text-foreground"
+                      )}
                     >
                       {link.label}
                       <span className="font-mono text-[10px] text-muted">

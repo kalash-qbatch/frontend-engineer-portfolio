@@ -7,6 +7,7 @@ export const SITE = {
   title: "Frontend Engineer",
   tagline: "Crafting immersive digital experiences.",
   email: "hello@palusallahrakha.dev",
+  phone: "+92 321 4567890",
   location: "Lahore, Pakistan",
   resumeUrl: "/resume.pdf",
   github: "https://github.com",
@@ -32,8 +33,9 @@ export const SITE = {
 export const NAV_LINKS = [
   { label: "About", href: "#about" },
   { label: "Skills", href: "#skills" },
-  { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
   { label: "Services", href: "#services" },
+  { label: "Projects", href: "#projects" },
+  { label: "Testimonials", href: "#testimonials" },
   { label: "Contact", href: "#contact" },
 ] as const;

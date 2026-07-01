@@ -1,4 +1,6 @@
-import { FaBriefcase, FaGraduationCap } from "react-icons/fa";
+import { FaGraduationCap } from "react-icons/fa";
+import { SiStripe, SiVercel } from "react-icons/si";
+import { TbBriefcase, TbSchool, TbWorld } from "react-icons/tb";
 import type { IconType } from "react-icons";
 
 export interface TimelineItem {
@@ -11,6 +13,7 @@ export interface TimelineItem {
   description: string;
   highlights: string[];
   icon: IconType;
+  typeIcon: IconType;
   color: string;
 }
 
@@ -25,7 +28,8 @@ export const EXPERIENCE: TimelineItem[] = [
     description:
       "Leading frontend architecture for developer tools. Built interactive 3D experiences, optimized bundle sizes by 40%, and mentored junior engineers.",
     highlights: ["3D dev tools", "40% bundle reduction", "Team mentorship"],
-    icon: FaBriefcase,
+    icon: SiVercel,
+    typeIcon: TbBriefcase,
     color: "#8B5CF6",
   },
   {
@@ -38,7 +42,8 @@ export const EXPERIENCE: TimelineItem[] = [
     description:
       "Developed payment dashboard components used by millions. Implemented complex data visualizations and accessibility improvements across the platform.",
     highlights: ["Payment dashboards", "Data visualization", "A11y improvements"],
-    icon: FaBriefcase,
+    icon: SiStripe,
+    typeIcon: TbBriefcase,
     color: "#635BFF",
   },
   {
@@ -51,7 +56,8 @@ export const EXPERIENCE: TimelineItem[] = [
     description:
       "Delivered premium web experiences for startups and agencies. Specialized in React, Vue, Gatsby, animation, and performance optimization.",
     highlights: ["React · Vue · Gatsby", "Agency delivery", "Performance tuning"],
-    icon: FaBriefcase,
+    icon: TbWorld,
+    typeIcon: TbBriefcase,
     color: "#22D3EE",
   },
   {
@@ -64,7 +70,8 @@ export const EXPERIENCE: TimelineItem[] = [
     description:
       "Focus on human-computer interaction and graphics programming. Dean's List, ACM chapter president.",
     highlights: ["HCI focus", "Graphics programming", "Dean's List"],
-    icon: FaGraduationCap,
+    icon: TbSchool,
+    typeIcon: FaGraduationCap,
     color: "#F59E0B",
   },
 ];

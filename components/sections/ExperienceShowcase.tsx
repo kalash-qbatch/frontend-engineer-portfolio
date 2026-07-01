@@ -1,9 +1,10 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { EXPERIENCE, type TimelineItem } from "@/constants/experience";
+import { ScrollLink } from "@/components/ui/ScrollLink";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { EASE } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,8 @@ const ExperienceRow = memo(function ExperienceRow({
   onSelect: () => void;
   reducedMotion: boolean;
 }) {
-  const Icon = item.icon;
+  const BrandIcon = item.icon;
+  const TypeIcon = item.typeIcon;
 
   return (
     <button
@@ -77,7 +79,7 @@ const ExperienceRow = memo(function ExperienceRow({
         )}
         aria-hidden
       >
-        <Icon size={120} style={{ color: item.color }} />
+        <BrandIcon size={120} style={{ color: item.color }} />
       </div>
 
       <div
@@ -91,15 +93,31 @@ const ExperienceRow = memo(function ExperienceRow({
         aria-hidden
       />
 
-      <div className="relative flex items-start gap-4 px-5 py-4 sm:px-6 sm:py-5">
+      <div className="relative flex items-start gap-3 px-5 py-4 sm:gap-4 sm:px-6 sm:py-5">
         <span
           className={cn(
-            "mt-0.5 shrink-0 font-mono text-[11px] tracking-widest transition-colors duration-300",
+            "mt-2 shrink-0 font-mono text-[11px] tracking-widest transition-colors duration-300",
             active ? "text-foreground/80" : "text-muted/40"
           )}
         >
           {String(index + 1).padStart(2, "0")}
         </span>
+
+        <div
+          className={cn(
+            "mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-500",
+            active
+              ? "border-white/12 shadow-[0_0_28px_-8px_var(--item-glow)]"
+              : "border-border/60 bg-surface/40"
+          )}
+          style={{ backgroundColor: active ? `${item.color}18` : `${item.color}0c` }}
+        >
+          <BrandIcon
+            size={20}
+            style={{ color: active ? item.color : `${item.color}cc` }}
+            aria-hidden
+          />
+        </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
@@ -107,7 +125,7 @@ const ExperienceRow = memo(function ExperienceRow({
               <div className="mb-1.5 flex flex-wrap items-center gap-2">
                 <span
                   className={cn(
-                    "inline-block rounded-md px-2 py-0.5 font-mono text-[9px] tracking-wide uppercase transition-all duration-300",
+                    "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-mono text-[9px] tracking-wide uppercase transition-all duration-300",
                     active ? "opacity-100" : "opacity-60"
                   )}
                   style={{
@@ -115,6 +133,7 @@ const ExperienceRow = memo(function ExperienceRow({
                     backgroundColor: active ? `${item.color}18` : `${item.color}0c`,
                   }}
                 >
+                  <BrandIcon size={10} aria-hidden />
                   {item.tag}
                 </span>
                 <span
@@ -136,26 +155,24 @@ const ExperienceRow = memo(function ExperienceRow({
               </h3>
               <p
                 className={cn(
-                  "mt-0.5 text-sm transition-colors duration-300",
+                  "mt-0.5 flex items-center gap-1.5 text-sm transition-colors duration-300",
                   active ? "text-muted" : "text-muted/60"
                 )}
               >
+                <TypeIcon size={12} className="shrink-0 opacity-60" aria-hidden />
                 {item.organization}
               </p>
             </div>
 
             <div
               className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all duration-500",
-                active
-                  ? "border-white/12 shadow-[0_0_28px_-8px_var(--item-glow)]"
-                  : "border-border/60 bg-surface/40"
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-all duration-500",
+                active ? "border-white/10 bg-white/5" : "border-border/50 bg-surface/30"
               )}
-              style={active ? { backgroundColor: `${item.color}16` } : undefined}
             >
-              <Icon
-                size={16}
-                style={{ color: active ? item.color : "var(--muted)" }}
+              <TypeIcon
+                size={14}
+                className={active ? "text-foreground/70" : "text-muted/50"}
                 aria-hidden
               />
             </div>
@@ -178,8 +195,9 @@ const ExperienceRow = memo(function ExperienceRow({
                   {item.highlights.map((highlight) => (
                     <li
                       key={highlight}
-                      className="rounded-full border border-border/70 bg-background/40 px-2.5 py-1 font-mono text-[9px] tracking-wide text-muted/90"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/40 px-2.5 py-1 font-mono text-[9px] tracking-wide text-muted/90"
                     >
+                      <Check size={10} style={{ color: item.color }} aria-hidden />
                       {highlight}
                     </li>
                   ))}
@@ -227,7 +245,7 @@ export const ExperienceShowcase = memo(function ExperienceShowcase() {
         <p className="font-mono text-[10px] tracking-widest text-muted/70 uppercase">
           6+ years shipping
         </p>
-        <a
+        <ScrollLink
           href="#contact"
           className="group inline-flex items-center gap-1.5 font-mono text-[10px] tracking-wide text-foreground/80 uppercase transition-colors hover:text-accent"
         >
@@ -236,7 +254,7 @@ export const ExperienceShowcase = memo(function ExperienceShowcase() {
             size={12}
             className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
           />
-        </a>
+        </ScrollLink>
       </div>
     </div>
   );

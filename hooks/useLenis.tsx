@@ -12,7 +12,8 @@ import {
 } from "react";
 import {
   nativeScrollTo,
-  resolveScrollElement,
+  resolveScrollPosition,
+  emitSectionNavigate,
   SCROLL_MAX_ATTEMPTS,
   SCROLL_NAV_OFFSET,
   SCROLL_RETRY_MS,
@@ -94,12 +95,31 @@ export function LenisProvider({
     };
   }, [enabled, reducedMotion]);
 
-  const scrollTo = useCallback((target: ScrollTarget, offset = SCROLL_NAV_OFFSET) => {
+  const scrollTo = useCallback((target: ScrollTarget) => {
+    const refineTarget = (instance: Lenis, delays = [350, 800, 1400]) => {
+      delays.forEach((ms) => {
+        window.setTimeout(() => {
+          instance.resize();
+          const refined = resolveScrollPosition(target, instance.scroll);
+          if (refined !== null && Math.abs(instance.scroll - refined) > 12) {
+            instance.scrollTo(refined, {
+              offset: 0,
+              duration: 0.45,
+              force: true,
+            });
+          }
+        }, ms);
+      });
+    };
+
     const attemptScroll = (attempt = 0) => {
-      const resolved =
-        typeof target === "number" || target instanceof HTMLElement
-          ? target
-          : resolveScrollElement(target);
+      const instance = lenisRef.current;
+      instance?.resize();
+
+      const resolved = resolveScrollPosition(
+        target,
+        instance?.scroll ?? window.scrollY
+      );
 
       if (resolved === null) {
         if (attempt < SCROLL_MAX_ATTEMPTS) {
@@ -108,15 +128,32 @@ export function LenisProvider({
         return;
       }
 
-      const instance = lenisRef.current;
-
       if (instance) {
-        instance.resize();
         instance.scrollTo(resolved, {
-          offset,
+          offset: 0,
           duration: 1.1,
           force: true,
+          onComplete: () => {
+            instance?.resize();
+            const refined = resolveScrollPosition(
+              target,
+              instance?.scroll ?? window.scrollY
+            );
+            if (
+              refined !== null &&
+              instance &&
+              Math.abs(instance.scroll - refined) > 12
+            ) {
+              instance.scrollTo(refined, {
+                offset: 0,
+                duration: 0.45,
+                force: true,
+              });
+            }
+            if (instance) refineTarget(instance);
+          },
         });
+        refineTarget(instance);
         return;
       }
 
@@ -125,11 +162,38 @@ export function LenisProvider({
         return;
       }
 
-      nativeScrollTo(resolved, offset);
+      nativeScrollTo(resolved);
     };
 
     attemptScroll();
   }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+      emitSectionNavigate(hash.slice(1));
+      scrollTo(hash);
+    };
+
+    const onPopState = () => {
+      const hash = window.location.hash;
+      if (hash) emitSectionNavigate(hash.slice(1));
+      scrollTo(hash || 0);
+    };
+
+    const bootTimer = window.setTimeout(scrollToHash, 300);
+    window.addEventListener("hashchange", scrollToHash);
+    window.addEventListener("popstate", onPopState);
+
+    return () => {
+      clearTimeout(bootTimer);
+      window.removeEventListener("hashchange", scrollToHash);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [enabled, scrollTo]);
 
   return (
     <LenisContext.Provider value={{ lenis, scrollTo }}>

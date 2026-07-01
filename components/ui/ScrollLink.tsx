@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLenis } from "@/hooks/useLenis";
+import { emitSectionNavigate } from "@/lib/scroll-target";
 import { cn } from "@/lib/utils";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 
@@ -55,6 +56,10 @@ export function ScrollLink({
       onBlur={onBlur}
       onClick={(e) => {
         e.preventDefault();
+        if (window.location.hash !== href) {
+          window.history.pushState(null, "", href);
+        }
+        emitSectionNavigate(href.slice(1));
         scrollTo(href);
         onClick?.();
       }}

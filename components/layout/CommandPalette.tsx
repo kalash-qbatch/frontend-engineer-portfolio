@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { NAV_LINKS } from "@/constants/site";
 import { useLenis } from "@/hooks/useLenis";
+import { emitSectionNavigate } from "@/lib/scroll-target";
 
 const COMMANDS = [
   ...NAV_LINKS.map((l) => ({ label: `Go to ${l.label}`, href: l.href })),
@@ -39,6 +40,10 @@ export function CommandPalette() {
     setOpen(false);
     setQuery("");
     if (href.startsWith("#")) {
+      if (window.location.hash !== href) {
+        window.history.pushState(null, "", href);
+      }
+      emitSectionNavigate(href.slice(1));
       scrollTo(href);
     } else {
       window.open(href, "_blank");

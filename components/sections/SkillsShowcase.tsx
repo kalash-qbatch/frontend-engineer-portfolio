@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { SkillCarousel } from "@/components/sections/SkillCarousel";
+import { ScrollLink } from "@/components/ui/ScrollLink";
 import {
   SKILL_CATEGORIES,
   SKILLS,
@@ -285,7 +286,7 @@ export const SkillsShowcase = memo(function SkillsShowcase() {
         <p className="font-mono text-[10px] tracking-widest text-muted/70 uppercase">
           {SKILLS.length} skills · 4 stacks
         </p>
-        <a
+        <ScrollLink
           href="#projects"
           className="group inline-flex items-center gap-1.5 font-mono text-[10px] tracking-wide text-foreground/80 uppercase transition-colors hover:text-accent"
         >
@@ -294,7 +295,7 @@ export const SkillsShowcase = memo(function SkillsShowcase() {
             size={12}
             className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
           />
-        </a>
+        </ScrollLink>
       </div>
     </div>
   );

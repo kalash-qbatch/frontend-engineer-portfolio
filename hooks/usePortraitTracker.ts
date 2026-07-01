@@ -4,6 +4,12 @@ import { useMotionValue } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SCROLL_CHAPTERS, type ScrollChapter } from "@/constants/scrollStory";
 import { useLenis } from "@/hooks/useLenis";
+import {
+  SECTION_NAV_EVENT,
+  STORY_CHAPTER_FOCAL_RATIO,
+  getChapterMids,
+  isScrollStorySectionId,
+} from "@/lib/scroll-target";
 
 const CLAMP_PAD = 120;
 const PORTRAIT_TOP_OFFSET = 40;
@@ -14,7 +20,7 @@ const ZONE_EXIT_START = 0.55;
 const ZONE_EXIT_END = 0.1;
 const STATIC_FADE_START = 300;
 const STATIC_FADE_END = 130;
-const FOCAL_RATIO = 0.44;
+const FOCAL_RATIO = STORY_CHAPTER_FOCAL_RATIO;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -135,19 +141,7 @@ function getStaticCardOpacity(px: number, py: number, vh: number) {
   return opacity;
 }
 
-function getScrollSegment(
-  map: Map<string, HTMLElement>,
-  scrollY: number,
-  vh: number
-) {
-  const mids = SCROLL_CHAPTERS.map((chapter) => {
-    const el = map.get(chapter.id);
-    const section = el?.closest("section");
-    const rect = section?.getBoundingClientRect();
-    if (!rect) return scrollY;
-    return scrollY + rect.top + rect.height * 0.5;
-  });
-
+function getScrollSegment(scrollY: number, vh: number, mids = getChapterMids(scrollY)) {
   const focal = scrollY + vh * FOCAL_RATIO;
   let index = 0;
   let frac = 0;
@@ -195,6 +189,39 @@ export function usePortraitTracker(
   const segmentRef = useRef({ from: 0, to: 0, activeId: SCROLL_CHAPTERS[0].id });
 
   useEffect(() => {
+    const snapToChapter = (
+      chapterIndex: number,
+      map: Map<string, HTMLElement>,
+      vh: number
+    ) => {
+      const chapter = SCROLL_CHAPTERS[chapterIndex];
+      const anchorEl = map.get(chapter.id);
+      if (!anchorEl) return;
+
+      const zone = document.getElementById("scroll-story");
+      const zoneRect = zone?.getBoundingClientRect();
+      const zoneOpacity = zoneRect ? getZoneOpacity(zoneRect.top, zoneRect.bottom, vh) : 1;
+      const lastSectionOpacity = getLastSectionOpacity(map, vh);
+      const point = getAnchorSlotPoint(chapter, anchorEl, vh, false);
+      const rect = anchorEl.getBoundingClientRect();
+
+      x.set(point.x);
+      y.set(point.y);
+      width.set(rect.width);
+      height.set(rect.height);
+      anchorX.set(chapter.side === "left" ? 0 : 1);
+      blend.set(0);
+      rotate.set(chapter.rotate ?? 0);
+      visibility.set(zoneOpacity * lastSectionOpacity);
+
+      segmentRef.current = { from: chapterIndex, to: chapterIndex, activeId: chapter.id };
+      setSegment({
+        fromIndex: chapterIndex,
+        toIndex: chapterIndex,
+        activeId: chapter.id,
+      });
+    };
+
     const update = () => {
       const map = anchorsRef.current;
       if (!map || map.size === 0) return;
@@ -217,7 +244,7 @@ export function usePortraitTracker(
         return;
       }
 
-      const { index, frac } = getScrollSegment(map, scrollY, vh);
+      const { index, frac } = getScrollSegment(scrollY, vh);
       const toIndexSeg = Math.min(index + 1, SCROLL_CHAPTERS.length - 1);
 
       const fromChapter = SCROLL_CHAPTERS[index];
@@ -287,15 +314,34 @@ export function usePortraitTracker(
 
     update();
 
+    const onNavigate = (event: Event) => {
+      const sectionId = (event as CustomEvent<{ sectionId: string }>).detail.sectionId;
+      const map = anchorsRef.current;
+      const vh = window.innerHeight;
+
+      if (map && vh > 0 && window.innerWidth >= 1024 && isScrollStorySectionId(sectionId)) {
+        const chapterIndex = SCROLL_CHAPTERS.findIndex((chapter) => chapter.id === sectionId);
+        if (chapterIndex >= 0) {
+          snapToChapter(chapterIndex, map, vh);
+        }
+      }
+
+      update();
+      requestAnimationFrame(update);
+      [120, 400, 800, 1200, 1600].forEach((ms) => window.setTimeout(update, ms));
+    };
+
     const onScroll = () => update();
     lenis?.on("scroll", onScroll);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", update, { passive: true });
+    window.addEventListener(SECTION_NAV_EVENT, onNavigate);
 
     return () => {
       lenis?.off("scroll", onScroll);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", update);
+      window.removeEventListener(SECTION_NAV_EVENT, onNavigate);
     };
   }, [lenis, anchorsRef, x, y, width, height, blend, rotate, visibility, anchorX]);
 

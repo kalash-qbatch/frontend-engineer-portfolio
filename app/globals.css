@@ -43,6 +43,11 @@
 
 html {
   scroll-behavior: auto;
+  scroll-padding-top: 6rem;
+}
+
+section[id] {
+  scroll-margin-top: 6rem;
 }
 
 html.lenis {

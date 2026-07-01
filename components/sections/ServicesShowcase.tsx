@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { SERVICES, type Service } from "@/constants/services";
+import { ScrollLink } from "@/components/ui/ScrollLink";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { EASE } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -209,7 +210,7 @@ export const ServicesShowcase = memo(function ServicesShowcase() {
         <p className="font-mono text-[10px] tracking-widest text-muted/70 uppercase">
           End-to-end delivery
         </p>
-        <a
+        <ScrollLink
           href="#contact"
           className="group inline-flex items-center gap-1.5 font-mono text-[10px] tracking-wide text-foreground/80 uppercase transition-colors hover:text-accent"
         >
@@ -218,7 +219,7 @@ export const ServicesShowcase = memo(function ServicesShowcase() {
             size={12}
             className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
           />
-        </a>
+        </ScrollLink>
       </div>
     </div>
   );

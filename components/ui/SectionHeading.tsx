@@ -11,6 +11,7 @@ interface SectionHeadingProps {
   description?: string;
   align?: "left" | "center";
   className?: string;
+  id?: string;
 }
 
 export const SectionHeading = memo(function SectionHeading({
@@ -20,11 +21,14 @@ export const SectionHeading = memo(function SectionHeading({
   description,
   align = "left",
   className,
+  id,
 }: SectionHeadingProps) {
   return (
     <div
+      id={id}
       className={cn(
         "mb-14 md:mb-20",
+        id && "scroll-mt-24",
         align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-3xl",
         className
       )}

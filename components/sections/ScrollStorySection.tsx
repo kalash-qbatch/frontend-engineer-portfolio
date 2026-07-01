@@ -10,6 +10,7 @@ import { SKILLS } from "@/constants/skills";
 import { StoryChapter } from "@/components/scroll/StoryChapter";
 import { Badge } from "@/components/ui/badge";
 import { AboutStatsGrid } from "@/components/ui/AnimatedStat";
+import { ScrollLink } from "@/components/ui/ScrollLink";
 import { ScrollStoryProvider } from "@/hooks/useScrollStory";
 
 const ScrollPortrait = dynamic(
@@ -60,13 +61,13 @@ const AboutContent = memo(function AboutContent() {
 
       <PortraitGallery className="pt-2" />
 
-      <a
+      <ScrollLink
         href="#contact"
         className="group inline-flex items-center gap-2 text-sm text-foreground hover:text-accent"
       >
         Get in touch
         <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-      </a>
+      </ScrollLink>
     </div>
   );
 });

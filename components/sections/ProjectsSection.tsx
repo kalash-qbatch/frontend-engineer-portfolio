@@ -31,7 +31,6 @@ export const ProjectsSection = memo(function ProjectsSection() {
   });
   const headerY = useTransform(scrollYProgress, [0, 1], reducedMotion ? [0, 0] : [32, -8]);
   const headerOpacity = useTransform(scrollYProgress, [0, 0.35], reducedMotion ? [1, 1] : [0.4, 1]);
-  const lineScale = useTransform(scrollYProgress, [0, 0.5], [0, 1]);
 
   useEffect(() => {
     const resize = () => lenis?.resize();
@@ -43,20 +42,12 @@ export const ProjectsSection = memo(function ProjectsSection() {
   return (
     <section
       ref={sectionRef}
-      id="projects"
       className="relative overflow-hidden py-6 md:py-14"
       aria-label="Projects"
     >
       <ProjectsAmbientFallback />
 
-      <div className="section-line mx-auto mb-24 max-w-7xl">
-        <motion.div
-          className="h-px w-full origin-left bg-accent/60"
-          style={{ scaleX: reducedMotion ? 1 : lineScale }}
-        />
-      </div>
-
-      <div className="relative z-[1] mx-auto max-w-7xl px-5 md:px-8">
+      <div className="relative z-[1] mx-auto max-w-7xl px-5 md:px-8 pt-4 md:pt-6">
         <motion.div
           style={{
             y: reducedMotion ? undefined : headerY,
@@ -65,6 +56,7 @@ export const ProjectsSection = memo(function ProjectsSection() {
           className="mb-12 flex flex-col gap-8 border-b border-border/80 pb-10 md:mb-14 md:flex-row md:items-end md:justify-between md:pb-12"
         >
           <SectionHeading
+            id="projects"
             index="03"
             label="Work"
             title="Selected projects"

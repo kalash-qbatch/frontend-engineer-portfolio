@@ -2,14 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Download, Mail, MapPin, Send } from "lucide-react";
+import { Download, Mail, MapPin, Phone, Send } from "lucide-react";
 import { FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 import { memo } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { SITE } from "@/constants/site";
-import { IMAGE_FRAMING } from "@/constants/images";
 import { sendContactEmail } from "@/lib/emailjs";
 import { getContactSubmitErrorMessage } from "@/lib/contact-errors";
 import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
@@ -20,8 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { defaultTransition } from "@/utils/animations";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -38,6 +35,8 @@ const SOCIAL_LINKS = [
   { icon: FaXTwitter, href: SITE.twitter, label: "X" },
   { icon: Mail, href: `mailto:${SITE.email}`, label: "Email" },
 ];
+
+const PHONE_HREF = `tel:${SITE.phone.replace(/\s/g, "")}`;
 
 export const ContactSection = memo(function ContactSection() {
   const {
@@ -74,42 +73,31 @@ export const ContactSection = memo(function ContactSection() {
   };
 
   return (
-    <section id="contact" className="relative py-6 md:py-14" aria-label="Contact">
-      <div className="section-line mx-auto mb-24 max-w-7xl" />
-
+    <section className="relative py-6 md:py-14" aria-label="Contact">
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <SectionHeading
+          id="contact"
           index="06"
           label="Contact"
           title="Let's build together"
           description="Tell me about your project — I typically respond within 24 hours."
         />
 
-        <div className="grid gap-4 lg:grid-cols-5 items-start">
-          <BentoCard className="overflow-hidden lg:col-span-2" delay={0} noPadding>
-            <div className="border-b border-border p-4 sm:p-5">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#111] ring-1 ring-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
-                <Image
-                  src={SITE.contactPortraitImage}
-                  alt={`${SITE.name} portrait`}
-                  fill
-                  className={cn(
-                    IMAGE_FRAMING.contact,
-                    "brightness-[1.04] contrast-[1.03] transition-transform duration-700 hover:scale-[1.03]"
-                  )}
-                  sizes="(max-width: 1024px) 100vw, 420px"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-4">
-                  <p className="font-mono text-[9px] tracking-[0.22em] text-white/85 uppercase">
-                    Let&apos;s connect
-                  </p>
-                </div>
-              </div>
+        <div className="grid gap-4 lg:grid-cols-5 lg:items-stretch">
+          <BentoCard className="flex h-full flex-col lg:col-span-2" delay={0} noPadding>
+            <div className="border-b border-border px-6 py-6 md:px-8 md:py-7">
+              <p className="font-mono text-[10px] tracking-[0.22em] text-accent uppercase">
+                Contact
+              </p>
+              <h3 className="mt-2 font-display text-2xl font-bold tracking-tight md:text-3xl">
+                Let&apos;s Connect
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Reach out for collaborations, freelance work, or just to say hello.
+              </p>
             </div>
 
-            <div className="space-y-6 p-6 md:p-8">
+            <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
               <div className="flex items-start gap-4">
                 <ProfileAvatar size="md" shape="rounded" imageKey="office" priority />
                 <div className="min-w-0 flex-1 border-l-2 border-accent pl-4">
@@ -121,43 +109,57 @@ export const ContactSection = memo(function ContactSection() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div className="flex items-center gap-3 text-sm text-muted">
-                  <MapPin size={16} className="shrink-0 text-foreground" />
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface/40">
+                    <MapPin size={15} className="text-foreground" />
+                  </span>
                   {SITE.location}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted">
-                  <Mail size={16} className="shrink-0 text-foreground" />
-                  <a href={`mailto:${SITE.email}`} className="hover:text-foreground transition-colors">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface/40">
+                    <Mail size={15} className="text-foreground" />
+                  </span>
+                  <a href={`mailto:${SITE.email}`} className="transition-colors hover:text-foreground">
                     {SITE.email}
+                  </a>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-muted">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface/40">
+                    <Phone size={15} className="text-foreground" />
+                  </span>
+                  <a href={PHONE_HREF} className="transition-colors hover:text-foreground">
+                    {SITE.phone}
                   </a>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                {SOCIAL_LINKS.map((social) => {
-                  const Icon = social.icon;
-                  return (
-                    <a
-                      key={social.label}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={social.label}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground"
-                    >
-                      <Icon size={16} />
-                    </a>
-                  );
-                })}
-              </div>
+              <div className="mt-auto space-y-5 border-t border-border pt-5">
+                <div className="flex gap-2">
+                  {SOCIAL_LINKS.map((social) => {
+                    const Icon = social.icon;
+                    return (
+                      <a
+                        key={social.label}
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={social.label}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted transition-colors hover:border-border-hover hover:text-foreground"
+                      >
+                        <Icon size={16} />
+                      </a>
+                    );
+                  })}
+                </div>
 
-              <Button variant="outline" className="w-full sm:w-auto" asChild>
-                <a href={SITE.resumeUrl}>
-                  <Download size={16} />
-                  Download resume
-                </a>
-              </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={SITE.resumeUrl}>
+                    <Download size={16} />
+                    Download resume
+                  </a>
+                </Button>
+              </div>
             </div>
           </BentoCard>
 
@@ -167,41 +169,72 @@ export const ContactSection = memo(function ContactSection() {
             viewport={{ once: true }}
             transition={defaultTransition}
             onSubmit={handleSubmit(onSubmit, onInvalid)}
-            className="card-glow space-y-5 rounded-2xl p-6 md:p-8 lg:col-span-3"
+            className="card-glow relative flex h-full flex-col overflow-hidden rounded-2xl lg:col-span-3"
             noValidate
           >
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Jane Doe" {...register("name")} aria-invalid={!!errors.name} />
-                {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
+            <div className="border-b border-border px-6 py-6 md:px-8 md:py-7">
+              <p className="font-mono text-[10px] tracking-[0.22em] text-accent uppercase">
+                Message
+              </p>
+              <h3 className="mt-2 font-display text-2xl font-bold tracking-tight md:text-3xl">
+                Send a message
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Share your project details and I&apos;ll reply within 24 hours.
+              </p>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-5 p-6 md:p-8">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" placeholder="Jane Doe" {...register("name")} aria-invalid={!!errors.name} />
+                  {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="jane@company.com"
+                    {...register("email")}
+                    aria-invalid={!!errors.email}
+                  />
+                  {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="jane@company.com" {...register("email")} aria-invalid={!!errors.email} />
-                {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
+                <Label htmlFor="subject">Subject</Label>
+                <Input
+                  id="subject"
+                  placeholder="Project inquiry"
+                  {...register("subject")}
+                  aria-invalid={!!errors.subject}
+                />
+                {errors.subject && <p className="text-xs text-red-400">{errors.subject.message}</p>}
               </div>
+              <div className="flex flex-1 flex-col space-y-2">
+                <Label htmlFor="message">Message</Label>
+                <Textarea
+                  id="message"
+                  placeholder="What are you building?"
+                  className="min-h-[140px] flex-1 resize-none"
+                  {...register("message")}
+                  aria-invalid={!!errors.message}
+                />
+                {errors.message && <p className="text-xs text-red-400">{errors.message.message}</p>}
+              </div>
+              <Button type="submit" disabled={isSubmitting} className="mt-auto w-full" variant="default">
+                {isSubmitting ? (
+                  "Sending…"
+                ) : (
+                  <>
+                    <Send size={16} />
+                    Send message
+                  </>
+                )}
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" placeholder="Project inquiry" {...register("subject")} aria-invalid={!!errors.subject} />
-              {errors.subject && <p className="text-xs text-red-400">{errors.subject.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea id="message" placeholder="What are you building?" {...register("message")} aria-invalid={!!errors.message} />
-              {errors.message && <p className="text-xs text-red-400">{errors.message.message}</p>}
-            </div>
-            <Button type="submit" disabled={isSubmitting} className="w-full" variant="default">
-              {isSubmitting ? (
-                "Sending…"
-              ) : (
-                <>
-                  <Send size={16} />
-                  Send message
-                </>
-              )}
-            </Button>
           </motion.form>
         </div>
       </div>

@@ -11,9 +11,9 @@ const TestimonialCard = memo(function TestimonialCard({
   testimonial: (typeof TESTIMONIALS)[0];
 }) {
   return (
-    <div className="card-glow mx-3 w-[340px] shrink-0 rounded-2xl p-6">
-      <p className="text-sm leading-[1.75] text-muted">&ldquo;{testimonial.content}&rdquo;</p>
-      <div className="mt-6 flex items-center gap-3 border-t border-border pt-5">
+    <div className="card-glow mx-3 flex h-[268px] w-[340px] shrink-0 flex-col rounded-2xl p-6">
+      <p className="flex-1 text-sm leading-[1.75] text-muted">&ldquo;{testimonial.content}&rdquo;</p>
+      <div className="mt-5 flex shrink-0 items-center gap-3 border-t border-border pt-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface font-mono text-[10px] font-bold">
           {testimonial.avatar}
         </div>
@@ -33,10 +33,9 @@ export const TestimonialsSection = memo(function TestimonialsSection() {
 
   return (
     <section className="relative overflow-hidden py-6 md:py-14" aria-label="Testimonials">
-      <div className="section-line mx-auto mb-24 max-w-7xl" />
-
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <SectionHeading
+          id="testimonials"
           index="05"
           label="Testimonials"
           title="Trusted by teams"
@@ -51,7 +50,7 @@ export const TestimonialsSection = memo(function TestimonialsSection() {
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
           transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-          className="flex w-max"
+          className="flex w-max items-stretch"
         >
           {doubled.map((t, i) => (
             <TestimonialCard key={`${t.id}-${i}`} testimonial={t} />

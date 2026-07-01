@@ -55,10 +55,9 @@ export const StoryChapter = memo(function StoryChapter({
   return (
     <section
       ref={setRefs}
-      id={chapter.anchor}
       aria-label={chapter.label}
       className={cn(
-        "relative min-h-[85vh] py-20 md:min-h-[90vh] md:py-28",
+        "relative scroll-mt-24 min-h-[85vh] py-20 md:min-h-[90vh] md:py-28",
         className
       )}
     >
@@ -67,23 +66,25 @@ export const StoryChapter = memo(function StoryChapter({
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <MobileChapterCard chapter={chapter} sectionRef={ref} pin={!isLastChapter} />
 
-        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-12 xl:gap-16">
+        <div className="grid items-start gap-10 lg:grid-cols-2 lg:items-center lg:gap-12 xl:gap-16">
           <div
             className={cn(
-              "hidden w-full lg:sticky lg:top-[15vh] lg:block lg:self-start lg:pt-12",
+              "hidden w-full lg:sticky lg:top-[15vh] lg:block lg:self-center lg:pt-0",
               portraitOnLeft ? "order-1" : "order-2"
             )}
           >
             <div
               ref={desktopAnchorRef}
+              data-portrait-anchor=""
               className="mx-auto aspect-[4/5] w-full max-h-[min(68vh,600px)]"
               aria-hidden="true"
             />
           </div>
 
           <div
+            id={chapter.anchor}
             className={cn(
-              "min-w-0 transition-opacity duration-500",
+              "min-w-0 scroll-mt-24 transition-opacity duration-500",
               portraitOnLeft ? "order-2" : "order-1",
               inView ? "opacity-100" : "opacity-40"
             )}

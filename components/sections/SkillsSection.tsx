@@ -6,8 +6,6 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 export function SkillsSection() {
   return (
     <section id="skills" className="relative py-6 md:py-14" aria-label="Skills">
-      <div className="section-line mx-auto mb-24 max-w-7xl" />
-
       <div className="mx-auto max-w-3xl px-5 md:px-8">
         <SectionHeading
           index="02"

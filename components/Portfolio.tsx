@@ -35,11 +35,6 @@ const Footer = dynamic(
   { loading: () => <footer className="h-40" aria-hidden /> }
 );
 
-const ScrollProgress = dynamic(
-  () => import("@/components/layout/ScrollProgress").then(loadNamed("ScrollProgress")),
-  { ssr: false }
-);
-
 const SiteBackground = dynamic(
   () => import("@/components/effects/BackgroundEffects").then(loadNamed("SiteBackground")),
   { ssr: false }
@@ -77,7 +72,6 @@ export default function Portfolio() {
       <LenisProvider enabled={bootDone}>
         <LenisResizeOnMount />
         <div className={cn(!bootDone && "h-[100dvh] overflow-hidden")}>
-          <ScrollProgress />
           <SiteBackground />
           <NoiseOverlay />
           <Navbar />
@@ -89,7 +83,7 @@ export default function Portfolio() {
             <LazySection eager minHeight="60vh" rootMargin="400px 0px">
               <ProjectsSection />
             </LazySection>
-            <LazySection minHeight="40vh" rootMargin="320px 0px">
+            <LazySection eager minHeight="40vh" rootMargin="320px 0px">
               <TestimonialsSection />
             </LazySection>
             <LazySection eager minHeight="55vh" rootMargin="320px 0px">
