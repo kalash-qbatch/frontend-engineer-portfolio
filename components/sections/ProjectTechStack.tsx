@@ -43,7 +43,7 @@ export const ProjectTechStack = memo(function ProjectTechStack({
         />
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex min-h-[4.25rem] flex-wrap content-start gap-1.5">
         {stack.map((tag) => {
           const Icon = tag.icon;
           const iconColor = tagIconColor(tag.color);

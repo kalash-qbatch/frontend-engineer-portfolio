@@ -90,6 +90,7 @@ const ProjectGridCard = memo(function ProjectGridCard({
 
   return (
     <motion.div
+      className="h-full"
       style={{
         y: reducedMotion ? undefined : y,
         opacity: reducedMotion ? undefined : opacity,
@@ -113,9 +114,9 @@ const ProjectGridCard = memo(function ProjectGridCard({
         data-cursor-label="View"
         className="card-glow project-card group flex h-full flex-col overflow-hidden rounded-2xl border border-border/50 will-change-transform"
       >
-        <ProjectCardVisual project={project} index={index} />
+        <ProjectCardVisual project={project} index={index} className="shrink-0" />
 
-        <div className="relative flex min-h-52 flex-1 flex-col border-t border-border/40 bg-linear-to-b from-surface/30 via-surface/50 to-surface/70 p-5 backdrop-blur-sm">
+        <div className="relative flex min-h-0 flex-1 flex-col border-t border-border/40 bg-linear-to-b from-surface/30 via-surface/50 to-surface/70 p-5 backdrop-blur-sm">
           <div
             aria-hidden
             className="pointer-events-none absolute top-0 right-0 h-24 w-24 opacity-30"
@@ -135,13 +136,13 @@ const ProjectGridCard = memo(function ProjectGridCard({
           >
             {project.role}
           </p>
-          <p className="relative mt-2 min-h-10 line-clamp-2 text-xs leading-relaxed text-muted">
+          <p className="relative mt-2 line-clamp-2 min-h-10 text-xs leading-relaxed text-muted">
             {project.description}
           </p>
 
-          <ProjectTechStack tags={project.tags} accent={colors.accent} className="mt-3" />
+          <ProjectTechStack tags={project.tags} accent={colors.accent} className="mt-3 shrink-0" />
 
-          <div className="relative mt-auto flex min-h-10 flex-wrap items-center gap-2 pt-5">
+          <div className="relative mt-auto flex min-h-11 shrink-0 flex-wrap items-center gap-2 pt-5">
             <Link
               href={`/projects/${project.id}`}
               data-cursor="pointer"
@@ -190,7 +191,7 @@ export function ProjectStackScroll({ projects, sectionRef }: ProjectStackScrollP
   return (
     <motion.div
       layout
-      className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3"
       style={{ perspective: 1200 }}
     >
       <AnimatePresence mode="popLayout">
@@ -198,6 +199,7 @@ export function ProjectStackScroll({ projects, sectionRef }: ProjectStackScrollP
           <motion.div
             key={project.id}
             layout
+            className="h-full"
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}

@@ -8,7 +8,7 @@ import { SCROLL_CHAPTERS } from "@/constants/scrollStory";
 import { ServicesShowcase } from "@/components/sections/ServicesShowcase";
 import { SKILLS } from "@/constants/skills";
 import { StoryChapter } from "@/components/scroll/StoryChapter";
-import { Badge } from "@/components/ui/badge";
+import { SkillBadge } from "@/components/ui/SkillBadge";
 import { AboutStatsGrid } from "@/components/ui/AnimatedStat";
 import { ScrollLink } from "@/components/ui/ScrollLink";
 import { ScrollStoryProvider } from "@/hooks/useScrollStory";
@@ -53,9 +53,7 @@ const AboutContent = memo(function AboutContent() {
 
       <div className="flex flex-wrap gap-2">
         {ABOUT_SKILLS.map((s) => (
-          <Badge key={s.name} variant="outline">
-            {s.name}
-          </Badge>
+          <SkillBadge key={s.name} skill={s} />
         ))}
       </div>
 

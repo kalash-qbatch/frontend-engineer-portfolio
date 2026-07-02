@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { SkillCarousel } from "@/components/sections/SkillCarousel";
 import { ScrollLink } from "@/components/ui/ScrollLink";
+import { MarqueeStrip } from "@/components/ui/MarqueeStrip";
 import {
   SKILL_CATEGORIES,
   SKILLS,
@@ -14,29 +15,13 @@ import {
   type Skill,
   type SkillCategory,
 } from "@/constants/skills";
+import { getSkillsMarqueeItems } from "@/lib/marquee-items";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { EASE, STAGGER } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-const MARQUEE_ITEMS = SKILLS.map((s) => s.name);
-
 function SkillsMarquee() {
-  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
-
-  return (
-    <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
-      <div className="animate-marquee flex shrink-0 items-center gap-6 whitespace-nowrap">
-        {items.map((item, i) => (
-          <span key={`${item}-${i}`} className="flex items-center gap-6">
-            <span className="font-mono text-[10px] tracking-[0.22em] text-muted/70 uppercase">
-              {item}
-            </span>
-            <span className="h-1 w-1 rounded-full bg-accent/50" aria-hidden />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
+  return <MarqueeStrip items={getSkillsMarqueeItems()} />;
 }
 
 const ProficiencyRing = memo(function ProficiencyRing({

@@ -6,7 +6,7 @@ import { SITE } from "@/constants/site";
 import { SKILLS } from "@/constants/skills";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Badge } from "@/components/ui/badge";
+import { SkillBadge } from "@/components/ui/SkillBadge";
 
 const STATS = [
   { value: "6+", label: "Years building products" },
@@ -87,9 +87,7 @@ export function AboutSection() {
           className="mt-4 flex flex-wrap gap-2"
         >
           {SKILLS.slice(0, 10).map((skill) => (
-            <Badge key={skill.name} variant="outline">
-              {skill.name}
-            </Badge>
+            <SkillBadge key={skill.name} skill={skill} />
           ))}
         </motion.div>
       </div>
