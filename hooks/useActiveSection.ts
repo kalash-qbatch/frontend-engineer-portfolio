@@ -12,8 +12,14 @@ import { useLenis } from "@/hooks/useLenis";
 const NAV_PIN_MS = 1300;
 const ACTIVE_ROOT_MARGIN = "-18% 0px -58% 0px";
 
-function syncHash(sectionId: string) {
+function syncHash(sectionId: string, sectionIds: readonly string[]) {
+  const urlHash = window.location.hash.slice(1);
+
   if (sectionId === "hero") {
+    // Keep incoming section hashes until scroll-to-hash completes
+    if (urlHash && urlHash !== "hero" && sectionIds.includes(urlHash)) {
+      return;
+    }
     if (window.location.hash) {
       window.history.replaceState(null, "", window.location.pathname);
     }
@@ -40,12 +46,19 @@ export function useActiveSection(sectionIds: readonly string[] = PAGE_SECTION_ID
     const applyActive = (next: string, syncUrl = true) => {
       setActiveId((prev) => (prev === next ? prev : next));
       if (syncUrl && Date.now() >= pinnedUntilRef.current) {
-        syncHash(next);
+        syncHash(next, sectionIds);
       }
     };
 
     const pickActive = () => {
       if (Date.now() < pinnedUntilRef.current) return;
+
+      const urlHash = window.location.hash.slice(1);
+      const scrollY = getScrollY(lenis?.scroll);
+      if (urlHash && sectionIds.includes(urlHash) && scrollY < 480) {
+        applyActive(urlHash, false);
+        return;
+      }
 
       let bestId = "";
       let bestRatio = 0;
@@ -63,7 +76,6 @@ export function useActiveSection(sectionIds: readonly string[] = PAGE_SECTION_ID
         return;
       }
 
-      const scrollY = getScrollY(lenis?.scroll);
       applyActive(resolveActiveSection(sectionIds, scrollY));
     };
 
@@ -91,7 +103,7 @@ export function useActiveSection(sectionIds: readonly string[] = PAGE_SECTION_ID
       if (!sectionIds.includes(sectionId)) return;
       pinnedUntilRef.current = Date.now() + NAV_PIN_MS;
       applyActive(sectionId, false);
-      syncHash(sectionId);
+      syncHash(sectionId, sectionIds);
     };
 
     pickActive();

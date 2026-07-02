@@ -7,12 +7,9 @@ export type ProjectVisualColors = {
 };
 
 export const PROJECT_VISUALS: Record<string, ProjectVisualColors> = {
-  nexus: { primary: "#2563eb", secondary: "#9333ea", accent: "#06b6d4", orbitDuration: "18s", globeSpinDuration: "32s" },
-  aurora: { primary: "#9333ea", secondary: "#db2777", accent: "#f472b6", orbitDuration: "22s", globeSpinDuration: "38s" },
-  pulse: { primary: "#0891b2", secondary: "#0d9488", accent: "#10b981", orbitDuration: "20s", globeSpinDuration: "34s" },
-  vertex: { primary: "#7c3aed", secondary: "#4f46e5", accent: "#818cf8", orbitDuration: "24s", globeSpinDuration: "40s" },
-  flux: { primary: "#ea580c", secondary: "#d97706", accent: "#eab308", orbitDuration: "19s", globeSpinDuration: "30s" },
-  orbit: { primary: "#e11d48", secondary: "#dc2626", accent: "#f97316", orbitDuration: "21s", globeSpinDuration: "36s" },
+  "ferrari-458": { primary: "#dc2626", secondary: "#991b1b", accent: "#fbbf24", orbitDuration: "16s", globeSpinDuration: "28s" },
+  "ball-puzzle": { primary: "#7c3aed", secondary: "#0891b2", accent: "#34d399", orbitDuration: "17s", globeSpinDuration: "30s" },
+  "pack-and-ship": { primary: "#f59e0b", secondary: "#0d9488", accent: "#fbbf24", orbitDuration: "18s", globeSpinDuration: "32s" },
 };
 
 export const DEFAULT_PROJECT_VISUAL: ProjectVisualColors = {

@@ -14,6 +14,7 @@ import {
   nativeScrollTo,
   resolveScrollPosition,
   emitSectionNavigate,
+  hasHomeSectionHash,
   SCROLL_MAX_ATTEMPTS,
   SCROLL_NAV_OFFSET,
   SCROLL_RETRY_MS,
@@ -31,12 +32,33 @@ const LenisContext = createContext<LenisContextValue>({
   scrollTo: () => {},
 });
 
+const LENIS_PRESETS = {
+  default: {
+    lerp: 0.075,
+    duration: 1.2,
+    wheelMultiplier: 0.9,
+    touchMultiplier: 1.5,
+    syncTouchLerp: 0.1,
+    anchorDuration: 1.1,
+  },
+  relaxed: {
+    lerp: 0.1,
+    duration: 1.45,
+    wheelMultiplier: 0.82,
+    touchMultiplier: 1.35,
+    syncTouchLerp: 0.12,
+    anchorDuration: 1.35,
+  },
+} as const;
+
 export function LenisProvider({
   children,
   enabled,
+  preset = "default",
 }: {
   children: ReactNode;
   enabled: boolean;
+  preset?: keyof typeof LENIS_PRESETS;
 }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
@@ -58,19 +80,21 @@ export function LenisProvider({
     void import("lenis").then(({ default: LenisCtor }) => {
       if (cancelled) return;
 
+      const tuning = LENIS_PRESETS[preset];
+
       instance = new LenisCtor({
         autoRaf: true,
-        lerp: 0.075,
-        duration: 1.2,
+        lerp: tuning.lerp,
+        duration: tuning.duration,
         smoothWheel: true,
-        wheelMultiplier: 0.9,
-        touchMultiplier: 1.5,
+        wheelMultiplier: tuning.wheelMultiplier,
+        touchMultiplier: tuning.touchMultiplier,
         syncTouch: true,
-        syncTouchLerp: 0.1,
+        syncTouchLerp: tuning.syncTouchLerp,
         infinite: false,
         anchors: {
           offset: SCROLL_NAV_OFFSET,
-          duration: 1.1,
+          duration: tuning.anchorDuration,
         },
       });
 
@@ -93,9 +117,10 @@ export function LenisProvider({
       lenisRef.current = null;
       setLenis(null);
     };
-  }, [enabled, reducedMotion]);
+  }, [enabled, reducedMotion, preset]);
 
   const scrollTo = useCallback((target: ScrollTarget) => {
+    const anchorDuration = preset === "relaxed" ? 1.35 : 1.1;
     const refineTarget = (instance: Lenis, delays = [350, 800, 1400]) => {
       delays.forEach((ms) => {
         window.setTimeout(() => {
@@ -131,7 +156,7 @@ export function LenisProvider({
       if (instance) {
         instance.scrollTo(resolved, {
           offset: 0,
-          duration: 1.1,
+          duration: anchorDuration,
           force: true,
           onComplete: () => {
             instance?.resize();
@@ -166,7 +191,7 @@ export function LenisProvider({
     };
 
     attemptScroll();
-  }, []);
+  }, [preset]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -184,7 +209,7 @@ export function LenisProvider({
       scrollTo(hash || 0);
     };
 
-    const bootTimer = window.setTimeout(scrollToHash, 300);
+    const bootTimer = window.setTimeout(scrollToHash, hasHomeSectionHash() ? 80 : 300);
     window.addEventListener("hashchange", scrollToHash);
     window.addEventListener("popstate", onPopState);
 

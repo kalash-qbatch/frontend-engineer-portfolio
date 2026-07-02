@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { getCaseStudy } from "@/constants/caseStudies";
 import { PROJECTS } from "@/constants/projects";
 import { SITE } from "@/constants/site";
+import { ProjectCaseStudy } from "@/components/projects/ProjectCaseStudy";
+import { HomeSectionLink } from "@/components/ui/HomeSectionLink";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { absoluteUrl, buildPageMetadata, buildProjectJsonLd, jsonLdScript } from "@/lib/seo";
@@ -31,11 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function ProjectPage({ params }: Props) {
-  const { slug } = await params;
-  const project = PROJECTS.find((p) => p.id === slug);
-  if (!project) notFound();
-
+function SimpleProjectPage({ project }: { project: (typeof PROJECTS)[number] }) {
   const projectUrl = absoluteUrl(`/projects/${project.id}`);
 
   return (
@@ -55,22 +54,22 @@ export default async function ProjectPage({ params }: Props) {
             </li>
             <li aria-hidden="true">/</li>
             <li>
-              <Link href="/#projects" className="transition-colors hover:text-foreground">
+              <HomeSectionLink section="projects" className="transition-colors hover:text-foreground">
                 Projects
-              </Link>
+              </HomeSectionLink>
             </li>
             <li aria-hidden="true">/</li>
             <li className="text-foreground">{project.title}</li>
           </ol>
         </nav>
 
-        <Link
-          href="/#projects"
+        <HomeSectionLink
+          section="projects"
           className="mb-10 inline-flex items-center gap-2 font-mono text-xs text-muted transition-colors hover:text-foreground"
         >
           <ArrowLeft size={14} />
           Back to work
-        </Link>
+        </HomeSectionLink>
 
         <article itemScope itemType="https://schema.org/CreativeWork">
           <meta itemProp="url" content={projectUrl} />
@@ -114,4 +113,26 @@ export default async function ProjectPage({ params }: Props) {
       </div>
     </main>
   );
+}
+
+export default async function ProjectPage({ params }: Props) {
+  const { slug } = await params;
+  const project = PROJECTS.find((p) => p.id === slug);
+  if (!project) notFound();
+
+  const caseStudy = getCaseStudy(project.id);
+
+  if (caseStudy) {
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(buildProjectJsonLd(project)) }}
+        />
+        <ProjectCaseStudy project={project} caseStudy={caseStudy} />
+      </>
+    );
+  }
+
+  return <SimpleProjectPage project={project} />;
 }

@@ -31,6 +31,7 @@ const EXTRA_TAGS: Record<string, { icon: IconType; color: string }> = {
   "react hook form": { icon: TbForms, color: "#EC5990" },
   lenis: { icon: TbRocket, color: "#8B5CF6" },
   r3f: { icon: SiThreedotjs, color: "#8B5CF6" },
+  zustand: { icon: TbBolt, color: "#E4B34C" },
   "rest apis": { icon: TbApi, color: "#3B82F6" },
 };
 
@@ -58,6 +59,7 @@ export function resolveProjectTags(tags: string[], limit = 4): ProjectTagMeta[] 
       "three.js": SiThreedotjs,
       gsap: TbRocket,
       "framer motion": TbSparkles,
+      zustand: TbBolt,
       accessibility: TbAccessible,
       git: SiGit,
       "node.js": SiNodedotjs,

@@ -34,6 +34,58 @@ export function isScrollStorySectionId(id: string) {
   return (SCROLL_STORY_SECTION_IDS as readonly string[]).includes(id);
 }
 
+export function hasHomeSectionHash() {
+  return typeof window !== "undefined" && /^#[a-z][\w-]*$/i.test(window.location.hash);
+}
+
+const RETURN_SECTION_KEY = "portfolio:return-section";
+
+export function stashReturnSection(section: string) {
+  const id = section.replace(/^#/, "");
+  if (!(PAGE_SECTION_IDS as readonly string[]).includes(id)) return;
+  try {
+    sessionStorage.setItem(RETURN_SECTION_KEY, id);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function consumeReturnSection(): string | null {
+  try {
+    const id = sessionStorage.getItem(RETURN_SECTION_KEY);
+    if (id) sessionStorage.removeItem(RETURN_SECTION_KEY);
+    return id && (PAGE_SECTION_IDS as readonly string[]).includes(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveHomeSectionTarget(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const hash = window.location.hash.slice(1);
+  if (hash && (PAGE_SECTION_IDS as readonly string[]).includes(hash)) {
+    try {
+      sessionStorage.removeItem(RETURN_SECTION_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+    return hash;
+  }
+
+  return consumeReturnSection();
+}
+
+export function scrollToSectionInstant(sectionId: string) {
+  if (typeof window === "undefined") return false;
+
+  const resolved = resolveScrollPosition(`#${sectionId}`, 0);
+  if (resolved === null) return false;
+
+  window.scrollTo(0, resolved);
+  return true;
+}
+
 export function emitSectionNavigate(sectionId: string) {
   window.dispatchEvent(
     new CustomEvent(SECTION_NAV_EVENT, { detail: { sectionId } })

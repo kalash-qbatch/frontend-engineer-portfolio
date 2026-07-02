@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useEffect, useState, type ComponentType } from "react";
+import { Suspense, useEffect, useLayoutEffect, useState, type ComponentType } from "react";
 import { BootLoader } from "@/components/layout/BootLoader";
 import { LazyMotionProvider } from "@/components/providers/LazyMotionProvider";
 import { LazySection } from "@/components/ui/LazySection";
@@ -9,11 +9,18 @@ import { SectionFallback } from "@/components/ui/SectionFallback";
 import { LenisProvider } from "@/hooks/useLenis";
 import { useIdleMount } from "@/hooks/useIdleMount";
 import { LenisResizeOnMount } from "@/components/layout/LenisResizeOnMount";
+import { HomeHashScroller } from "@/components/layout/HomeHashScroller";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ScrollStorySection } from "@/components/sections/ScrollStorySection";
 import { ProjectsSection } from "@/components/sections/ProjectsSection";
 import { ContactSection } from "@/components/sections/ContactSection";
-import { isHeroBlobReady, subscribeHeroBlobReady } from "@/lib/hero-blob-ready";
+import { isHeroBlobReady, markHeroBlobReady, subscribeHeroBlobReady } from "@/lib/hero-blob-ready";
+import { markBootComplete, shouldSkipBootLoader } from "@/lib/boot";
+import {
+  emitSectionNavigate,
+  resolveHomeSectionTarget,
+  scrollToSectionInstant,
+} from "@/lib/scroll-target";
 import { cn } from "@/lib/utils";
 
 function loadNamed<P extends Record<string, unknown>, K extends keyof P>(key: K) {
@@ -58,10 +65,36 @@ const EndingSection = dynamic(
 
 export default function Portfolio() {
   const [bootDone, setBootDone] = useState(false);
+  const [skipBoot, setSkipBoot] = useState(false);
+  const [returnSection, setReturnSection] = useState<string | null>(null);
   const [heroBlobReady, setHeroBlobReady] = useState(isHeroBlobReady);
   const idleReady = useIdleMount(bootDone);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const targetSection = resolveHomeSectionTarget();
+
+    if (targetSection) {
+      window.history.replaceState(null, "", `#${targetSection}`);
+      if (!scrollToSectionInstant(targetSection)) {
+        requestAnimationFrame(() => scrollToSectionInstant(targetSection));
+      }
+      emitSectionNavigate(targetSection);
+      setReturnSection(targetSection);
+      markBootComplete();
+      markHeroBlobReady();
+      setSkipBoot(true);
+      setBootDone(true);
+      return;
+    }
+
+    if (shouldSkipBootLoader()) {
+      markBootComplete();
+      markHeroBlobReady();
+      setSkipBoot(true);
+      setBootDone(true);
+      return;
+    }
+
     void import("@/components/canvas/HeroBlobScene");
   }, []);
 
@@ -71,12 +104,13 @@ export default function Portfolio() {
     <LazyMotionProvider>
       <LenisProvider enabled={bootDone}>
         <LenisResizeOnMount />
-        <div className={cn(!bootDone && "h-[100dvh] overflow-hidden")}>
+        <HomeHashScroller sectionId={returnSection} />
+        <div className={cn(!bootDone && !skipBoot && "h-[100dvh] overflow-hidden")}>
           <SiteBackground />
           <NoiseOverlay />
           <Navbar />
           <main id="main-content" className="relative z-[2]">
-            <HeroSection blobPreload={!bootDone} />
+            <HeroSection blobPreload={!bootDone && !returnSection} />
             <LazySection eager minHeight="120vh" rootMargin="480px 0px">
               <ScrollStorySection />
             </LazySection>
@@ -98,8 +132,14 @@ export default function Portfolio() {
             {idleReady && <CommandPalette />}
           </Suspense>
         </div>
-        {!bootDone && (
-          <BootLoader canComplete={heroBlobReady} onComplete={() => setBootDone(true)} />
+        {!bootDone && !skipBoot && (
+          <BootLoader
+            canComplete={heroBlobReady}
+            onComplete={() => {
+              markBootComplete();
+              setBootDone(true);
+            }}
+          />
         )}
       </LenisProvider>
     </LazyMotionProvider>

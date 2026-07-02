@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { SITE } from "@/constants/site";
 import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { markBootComplete } from "@/lib/boot";
 import { EASE } from "@/lib/motion";
 
 interface BootLoaderProps {
@@ -25,11 +26,13 @@ export function BootLoader({ onComplete, canComplete = false }: BootLoaderProps)
   canCompleteRef.current = canComplete;
 
   const finish = useCallback(() => {
+    markBootComplete();
     setVisible(false);
   }, []);
 
   useEffect(() => {
     if (reducedMotion) {
+      markBootComplete();
       onComplete();
       return;
     }
