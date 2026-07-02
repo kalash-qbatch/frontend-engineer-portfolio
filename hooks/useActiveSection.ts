@@ -12,14 +12,8 @@ import { useLenis } from "@/hooks/useLenis";
 const NAV_PIN_MS = 1300;
 const ACTIVE_ROOT_MARGIN = "-18% 0px -58% 0px";
 
-function syncHash(sectionId: string, sectionIds: readonly string[]) {
-  const urlHash = window.location.hash.slice(1);
-
+function syncHash(sectionId: string) {
   if (sectionId === "hero") {
-    // Keep incoming section hashes until scroll-to-hash completes
-    if (urlHash && urlHash !== "hero" && sectionIds.includes(urlHash)) {
-      return;
-    }
     if (window.location.hash) {
       window.history.replaceState(null, "", window.location.pathname);
     }
@@ -36,7 +30,10 @@ export function useActiveSection(sectionIds: readonly string[] = PAGE_SECTION_ID
   const [activeId, setActiveId] = useState(() => {
     if (typeof window === "undefined") return sectionIds[0];
     const hash = window.location.hash.slice(1);
-    return hash && sectionIds.includes(hash) ? hash : sectionIds[0];
+    if (hash && sectionIds.includes(hash) && window.scrollY > 120) {
+      return hash;
+    }
+    return sectionIds[0];
   });
   const { lenis } = useLenis();
   const pinnedUntilRef = useRef(0);
@@ -45,18 +42,31 @@ export function useActiveSection(sectionIds: readonly string[] = PAGE_SECTION_ID
   useEffect(() => {
     const applyActive = (next: string, syncUrl = true) => {
       setActiveId((prev) => (prev === next ? prev : next));
-      if (syncUrl && Date.now() >= pinnedUntilRef.current) {
-        syncHash(next, sectionIds);
+      const pinned = Date.now() < pinnedUntilRef.current;
+      if (syncUrl && !pinned) {
+        syncHash(next);
       }
     };
 
-    const pickActive = () => {
-      if (Date.now() < pinnedUntilRef.current) return;
+    const isHeroDominant = () => {
+      const heroEl = document.getElementById("hero");
+      if (!heroEl) return false;
+      const rect = heroEl.getBoundingClientRect();
+      return rect.top >= -32 && rect.bottom > window.innerHeight * 0.5;
+    };
 
-      const urlHash = window.location.hash.slice(1);
+    const pickActive = () => {
       const scrollY = getScrollY(lenis?.scroll);
-      if (urlHash && sectionIds.includes(urlHash) && scrollY < 480) {
+      const pinned = Date.now() < pinnedUntilRef.current;
+      const urlHash = window.location.hash.slice(1);
+
+      if (pinned && urlHash && sectionIds.includes(urlHash)) {
         applyActive(urlHash, false);
+        return;
+      }
+
+      if (!pinned && (scrollY < 120 || isHeroDominant())) {
+        applyActive("hero");
         return;
       }
 
@@ -103,7 +113,14 @@ export function useActiveSection(sectionIds: readonly string[] = PAGE_SECTION_ID
       if (!sectionIds.includes(sectionId)) return;
       pinnedUntilRef.current = Date.now() + NAV_PIN_MS;
       applyActive(sectionId, false);
-      syncHash(sectionId, sectionIds);
+      if (sectionId === "hero") {
+        syncHash("hero");
+      } else {
+        const hash = `#${sectionId}`;
+        if (window.location.hash !== hash) {
+          window.history.replaceState(null, "", hash);
+        }
+      }
     };
 
     pickActive();
