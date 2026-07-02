@@ -171,8 +171,10 @@ function SceneContent({ scrollRef, cursorRef, quality }: SceneProps) {
 
 export function HeroBlobFallback({
   cursorRef,
+  mobile = false,
 }: {
   cursorRef?: RefObject<HeroCursorState>;
+  mobile?: boolean;
 }) {
   const groupRef = useRef<HTMLDivElement>(null);
   const smooth = useRef({ x: 0, y: 0 });
@@ -199,22 +201,41 @@ export function HeroBlobFallback({
     return () => cancelAnimationFrame(frame);
   }, [cursorRef]);
 
+  const corePos = mobile ? "left-1/2 top-[30%]" : "left-[58%] top-[38%]";
+  const coreSize = mobile ? "h-[52vmin] w-[52vmin]" : "h-[42vmin] w-[42vmin]";
+  const glowPos = mobile ? "left-1/2 top-[30%]" : "left-[58%] top-[38%]";
+  const glowSize = mobile ? "h-[68vmin] w-[68vmin]" : "h-[55vmin] w-[55vmin]";
+  const accentPos = mobile ? "left-1/2 top-[34%]" : "left-[52%] top-[42%]";
+  const accentSize = mobile ? "h-[36vmin] w-[36vmin]" : "h-[28vmin] w-[28vmin]";
+
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden>
       <div ref={groupRef} className="absolute inset-0 will-change-transform">
-        <div className="hero-blob-core absolute left-[58%] top-[38%] h-[42vmin] w-[42vmin]">
-          <div className="hero-blob-sphere h-full w-full rounded-full bg-gradient-to-br from-violet-500/55 via-purple-600/35 to-indigo-900/25 shadow-[0_0_80px_rgba(139,92,246,0.45)]" />
+        <div className={`hero-blob-core absolute ${corePos} ${coreSize}`}>
+          <div
+            className={
+              mobile
+                ? "hero-blob-sphere h-full w-full rounded-full bg-gradient-to-br from-violet-400/70 via-purple-500/50 to-indigo-800/30 shadow-[0_0_100px_rgba(139,92,246,0.65)]"
+                : "hero-blob-sphere h-full w-full rounded-full bg-gradient-to-br from-violet-500/55 via-purple-600/35 to-indigo-900/25 shadow-[0_0_80px_rgba(139,92,246,0.45)]"
+            }
+          />
         </div>
-        <div className="absolute left-[58%] top-[38%] h-[55vmin] w-[55vmin] -translate-x-1/2 -translate-y-1/2">
-          <div className="h-full w-full animate-[blob-glow_5s_ease-in-out_infinite] rounded-full bg-violet-600/30 blur-[90px]" />
+        <div className={`absolute ${glowPos} ${glowSize} -translate-x-1/2 -translate-y-1/2`}>
+          <div
+            className={`h-full w-full animate-[blob-glow_5s_ease-in-out_infinite] rounded-full blur-[90px] ${mobile ? "bg-violet-500/45" : "bg-violet-600/30"}`}
+          />
         </div>
-        <div className="absolute left-[52%] top-[42%] h-[28vmin] w-[28vmin] -translate-x-1/2 -translate-y-1/2">
-          <div className="h-full w-full animate-[blob-glow_7s_ease-in-out_infinite_0.8s] rounded-full bg-violet-400/20 blur-[50px]" />
+        <div className={`absolute ${accentPos} ${accentSize} -translate-x-1/2 -translate-y-1/2`}>
+          <div
+            className={`h-full w-full animate-[blob-glow_7s_ease-in-out_infinite_0.8s] rounded-full blur-[50px] ${mobile ? "bg-violet-300/35" : "bg-violet-400/20"}`}
+          />
         </div>
       </div>
-      <div className="absolute right-1/4 top-1/2 h-[30vmin] w-[30vmin] -translate-y-1/2">
-        <div className="h-full w-full animate-[blob-glow_6s_ease-in-out_infinite_1.2s] rounded-full bg-blue-600/15 blur-[80px]" />
-      </div>
+      {!mobile && (
+        <div className="absolute right-1/4 top-1/2 h-[30vmin] w-[30vmin] -translate-y-1/2">
+          <div className="h-full w-full animate-[blob-glow_6s_ease-in-out_infinite_1.2s] rounded-full bg-blue-600/15 blur-[80px]" />
+        </div>
+      )}
     </div>
   );
 }

@@ -112,11 +112,11 @@ export const HeroSection = memo(function HeroSection({
       aria-label="Hero"
     >
       <motion.div
-        className="absolute inset-0 z-[1]"
+        className="absolute inset-0 z-[1] max-md:z-[3]"
         style={{ opacity: blobPreload ? 0 : contentOpacity }}
         aria-hidden={blobPreload}
       >
-        <HeroBlobFallback cursorRef={cursorRef} />
+        <HeroBlobFallback cursorRef={cursorRef} mobile={mounted && isMobile} />
         {mounted && canUse3D && (
           <Viewport3D className="absolute inset-0" rootMargin="120px 0px" threshold={0}>
             <HeroBlobScene
@@ -131,8 +131,8 @@ export const HeroSection = memo(function HeroSection({
 
       <HeroPortrait parallaxY={portraitY} />
 
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-background via-background/25 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_55%_50%_at_58%_40%,rgba(139,92,246,0.12),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-background via-background/25 to-transparent max-md:via-background/10" />
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_55%_50%_at_58%_40%,rgba(139,92,246,0.12),transparent)] max-md:bg-[radial-gradient(ellipse_65%_55%_at_50%_32%,rgba(139,92,246,0.18),transparent)]" />
 
       <motion.div
         style={{ y: contentY, opacity: contentOpacity }}

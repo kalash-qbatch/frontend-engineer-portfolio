@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono, Syne } from "next/font/google";
+import { DM_Sans, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { buildRootJsonLd, jsonLdScript, rootMetadata } from "@/lib/seo";
 import { Toaster } from "@/components/ui/Toaster";
 
-const syne = Syne({
-  variable: "--font-syne",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
   display: "swap",
 });
@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmSans.variable} ${jetbrains.variable} h-full`}>
+    <html lang="en" className={`${plusJakarta.variable} ${dmSans.variable} ${jetbrains.variable} h-full`}>
       <head>
         <script
           type="application/ld+json"

@@ -23,7 +23,7 @@
   --color-surface: var(--surface);
   --color-accent: var(--accent);
   --font-sans: var(--font-dm-sans);
-  --font-display: var(--font-syne);
+  --font-display: var(--font-plus-jakarta);
   --font-mono: var(--font-jetbrains);
 }
 
